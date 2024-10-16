@@ -70,6 +70,7 @@ function questsystem_install()
     PRIMARY KEY (`id`)
      ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_general_ci;");
   //    `groups_questdepend` int(1) DEFAULT 0,
+
   $db->query("CREATE TABLE " . TABLE_PREFIX . "questsystem_quest (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `type` int(10) NOT NULL,
@@ -83,6 +84,7 @@ function questsystem_install()
       PRIMARY KEY (`id`)
        ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_general_ci;");
   //    `repeat_users` varchar(500) NOT NULL DEFAULT '', 
+
   $db->query("CREATE TABLE " . TABLE_PREFIX . "questsystem_quest_user (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `qid` int(11) NOT NULL DEFAULT 0,
@@ -488,6 +490,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "version" => "1.0",
     "dateline" => TIME_NOW
   );
+
   $template[9] = array(
     "title" => 'questsystem_nav',
     "template" => '<div class="questshow__item questshow-nav">
@@ -509,6 +512,30 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "dateline" => TIME_NOW
   );
 
+  $template[10] = array(
+    "title" => 'questsystem_member_bit',
+    "template" => '<span class="questsystem__points"><strong>{$punkte}</strong> » {$reason} » {$date}</span>
+',
+    "sid" => "-2",
+    "version" => "1.0",
+    "dateline" => TIME_NOW
+  );
+
+  $template[11] = array(
+    "title" => 'questsystem_member',
+    "template" => '
+    <div class="questsystem__profile">
+    <h2>{$username}</h2>
+      » hat insgesamt {$points_sum} gesammelt
+        <div class="questsystem__profilecontainer ">
+        {$questsystem_member_bit}
+        </div>
+      </div>
+    ',
+    "sid" => "-2",
+    "version" => "1.0",
+    "dateline" => TIME_NOW
+  );
 
   foreach ($template as $row) {
     $db->insert_query("templates", $row);
@@ -1979,13 +2006,40 @@ function questsystem_do_submenu()
   return $sub_tabs;
 }
 
+
 /**
- * Shows on which Quests the user is working
+ * Questsystem Punkteanzeige im Profil
+ * Zeige alle Quests
+ * Quests nehmen
  */
-$plugins->add_hook("member_profile_end", "questsystem_profile");
-function questsystem_profile()
+$plugins->add_hook("member_profile_end", "questsystem_member_profile");
+function questsystem_member_profile()
 {
-  global $db, $mybb;
+  global $memprofile, $db, $mybb, $templates;
+  $questsystem_member_bit = "";
+  $questsystem_member = "";
+  if ($mybb->settings['questsystem_points_generell']) {
+    $uid = $memprofile['uid'];
+    $points_sum = $db->write_query("SELECT sum(points) as total, uid FROM `" . TABLE_PREFIX . "questsystem_points` WHERE uid = '{$memprofile['uid']}' GROUP BY uid ");
+    $get_all_points = $db->simple_select("questsystem_points", "*", "uid = {$uid}", array("order_by" => "date", "order_dir" => "desc"));
+    while ($userpoints = $db->fetch_array($get_all_points)) {
+      if ($userpoints['points'] == 1 or $userpoints['points'] == -1) {
+        $punkte = $userpoints['points'] . " Punkt";
+      } else {
+        $punkte = $userpoints['points'] . " Punkte";
+      }
+      $reason = $userpoints['reason'];
+
+      $date = date("d.m.Y", strtotime($userpoints['date']));
+
+      if ($mybb->usergroup['canmodcp'] == 1) {
+        $date .= " <a href=\"member.php?action=profile&uid={$uid}&deleteentry={$userpoints['hid']}\" onclick=\"return confirm('Möchtest du den Punkteeintrag wirklich löschen?');\" style=\"font-size: 0.7em;\">[x]</a>";
+      }
+
+      eval("\$questsystem_member_bit = \"" . $templates->get("questsystem_member_bit") . "\";");
+    }
+    eval("\$questsystem_member = \"" . $templates->get("questsystem_member") . "\";");
+  }
 }
 
 /**
