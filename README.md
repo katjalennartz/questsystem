@@ -1,12 +1,33 @@
 # Questsystem
-Questsystem für RPGs
+Questsystem für RPGs.
 
-## Variablen  
-  Template: index" hinter {$header}: {$questsystem_index_mod}
-  Template: postbit vor {$post['button_edit']}: {$post['questbutton']}
-  Template: member_profile hinter {$awaybit}: {$questsystem_member}
+- Questtypen anlegen (Beschränkung für einzelne Gruppen, auch über Profilfeld/Steckbrieffeld)
+  - Einstellung ob Quests ablaufen
+  - Punkte für erledigte Quests (wenn gewünscht)
+  - Abzug wenn Quest nicht abgeschlossen wird (wenn gewünscht)
+  - Questzuteilung über Admin oder zufällig
+  - Gleichzeitiges bearbeiten? Darf das Quest nur von einem User gleichzeitig bearbeitet werden?
+  - Gruppenquest? Dürfen Quests als Gruppenquest eingereicht werden?
+  - Questeinreichung? Dürfen User Quests einreichen?
+  - Abschluss als Post oder gesamte Szene
+- Quests erstellen
+- Quests einreichen (Gruppenquests oder Einzelquests)
+- Optional: Punkte für Quests sammeln
+- Quests erledigen und einreichen
 
-## Templates
+
+
+## good to know
+### Links
+Verwaltung ACP: admin/index.php?module=config-questsystem  
+Übersicht: misc.php?action=questsystem
+
+### Variablen  
+- Template: index" hinter {$header}: {$questsystem_index_mod}
+- Template: postbit vor {$post['button_edit']}: {$post['questbutton']}
+- Template: member_profile hinter {$awaybit}: {$questsystem_member} 
+
+### Templates
 - questsystem_index_mod
 - questsystem_index_mod_bit
 - questsystem_misc_done
