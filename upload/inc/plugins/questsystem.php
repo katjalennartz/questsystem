@@ -9,8 +9,8 @@
  * 
  */
 // enable for Debugging:
-error_reporting(E_ERROR | E_PARSE);
-ini_set('display_errors', true);
+// error_reporting(E_ERROR | E_PARSE);
+// ini_set('display_errors', true);
 
 
 
@@ -537,6 +537,106 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "dateline" => TIME_NOW
   );
 
+
+  $template[12] = array(
+    "title" => 'questsystem_form_grouprequest',
+    "template" => '
+          <span class="groupquest"><br/>Möchtest du ein Gruppenquest erledigen? <br/>
+            Dann trage hier deinen Partner ein, sonst lasse das Feld leer. 
+            <br/>
+            <b>Achtung:</b> vor dem Eintragen, abklären ob der User einverstanden ist.<br/>
+          
+            <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+            class="select2-input select2-default" id="s2id_autogen1" tabindex="1" placeholder="" name="partners"><br/><br/>
+          </span>
+    ',
+    "sid" => "-2",
+    "version" => "1.0",
+    "dateline" => TIME_NOW
+  );
+
+  $template[13] = array(
+    "title" => 'questsystem_form_takequest',
+    "template" => '<form id="{$quest_type}" method="post" action="">
+            <input type="hidden" name="id" value="{$type[\\\'id\\\']}">
+            <input type="hidden" name="type" value="{$quest_type}"\>
+            {$formgroup}
+            <input type="submit" id="{$quest_type}" name="take_waiting" value="Quest anfordern"/>
+            </form>
+    ',
+    "sid" => "-2",
+    "version" => "1.0",
+    "dateline" => TIME_NOW
+  );
+
+  $template[14] = array(
+    "title" => 'questsystem_form_takequest_random',
+    "template" => '<form id="{$quest_type}" method="post" action="misc.php?action=questsystem&type={$quest_type}">
+          <input type="hidden" value="{$type[\\\'id\\\']}" name="questid"/>
+          {$formgroup}
+          <input type="submit" id="{$quest_type}" name="take_random" value="Quest ziehen"/>
+          </form>
+    ',
+    "sid" => "-2",
+    "version" => "1.0",
+    "dateline" => TIME_NOW
+  );
+
+  $template[14] = array(
+    "title" => 'questsystem_index_mod_bit_quest',
+    "template" => '<div class="quest_index__item"><b>Questvorschlag</b><br/>
+      <p class="quest_index_descr">{$quest_in[\\\'name\\\']}: 
+      {$quest_in[\\\'questdescr\\\']}<br/>
+      <a href="admin/index.php?module=config-questsystem&action=questsystem_quest_manage">[hier freischalten]</a> 
+      <a href="private.php?action=send&uid={$quest_in[\\\'uid\\\']}">[ Nachfragen(PN) ]</a> 
+      <a onclick="$(\\\'#editquest{$quest_in[\\\'id\\\']}\\\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \\\'undefined\\\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">[edit infos]</a>      </span>
+
+      <div class="modal editquest" id="editquest{$quest_in[\\\'id\\\']}" style="display: none; padding: 10px; margin: auto; text-align: center;">
+      <form action="" id="formeditscene" method="post" >
+      <input type="hidden" value="{$quest_in[\\\'id\\\']}" name="id" id="id"/>
+      <center>
+      <input type="text" name="questtyp" id="questtyp" placeholder="queststyp 1 oder 2" value="{$quest_in[\\\'type\\\']}" /><br>
+      1 für plottasks oder 2 für userquests<br><br>
+      <textarea name="questdescr" id="questdescr" placeholder="Beschreibung" style="height: 80px;"> {$quest_in[\\\'questdescr\\\']}</textarea><br>
+           </form>
+      <button name="edit_questin" id="editquestin">Submit</button>
+  </div>
+      </p>
+
+      </div>',
+    "sid" => "-2",
+    "version" => "1.0",
+    "dateline" => TIME_NOW
+  );
+
+  $template[15] = array(
+    "title" => 'questsystem_index_mod_bit_user',
+    "template" => '<div class="quest_index__item">
+      <b>Questzuteilung</b><br/>
+      Mindestens ein User wartet auf Questzuteilung.<br/>
+      <span class="quest_index_descr">
+      <a href="admin/index.php?module=config-questsystem&action=questsystem_quest_manage">[hier zuteilen]</a> 
+      </span>
+      </div>',
+    "sid" => "-2",
+    "version" => "1.0",
+    "dateline" => TIME_NOW
+  );
+
+  $template[16] = array(
+    "title" => 'questsystem_index_mod_bit_submit',
+    "template" => '<div class="quest_index__item">
+      <span class="quest_index_descr"><b>Quest Einreichung:</b><br/>{$username} hat ein  <a href="showthread.php?tid={$quest_sub[\\\'tid\\\']}&pid={$quest_sub[\\\'pid\\\']}#pid{$quest_sub[\\\'pid\\\']}">Quest eingereicht.</a><br/>
+      -> {$questinfo[\\\'finish_typ\\\']} ist relevant.<br/><br/>
+      Quest: <i>{$questdetail[\\\'questdescr\\\']} </i><br/>
+      <a href="index.php?action=questaccept&id={$quest_sub[\\\'id\\\']}&qtid={$quest_sub[\\\'qtid\\\']}&qid={$quest_sub[\\\'qid\\\']}&uid={$quest_sub[\\\'uid\\\']}">[accept]</a> 
+      <a href="index.php?action=questdeny&id={$quest_sub[\\\'id\\\']}&qtid={$quest_sub[\\\'qtid\\\']}&qid={$quest_sub[\\\'qid\\\']}&uid={$quest_sub[\\\'uid\\\']}">[deny]</a> 
+      </div>',
+    "sid" => "-2",
+    "version" => "1.0",
+    "dateline" => TIME_NOW
+  );
+
   foreach ($template as $row) {
     $db->insert_query("templates", $row);
   }
@@ -888,14 +988,14 @@ function questsystem_admin_load()
           $errors[] = $lang->questsystem_manage_cqt_form_finish_err;
         }
         if (empty($errors)) {
-          if ($mybb->input['groupselect'] == "custom") {
+          if ($mybb->get_input('groupselect') == "custom") {
             // var_dump($mybb->input['groupselect_sel']);
             $grpstring = implode(",", $mybb->input['groupselect_sel']);
           }
-          if ($mybb->input['groupselect'] == "all") {
+          if ($mybb->get_input('groupselect') == "all") {
             $grpstring = "-1";
           }
-          if ($mybb->input['groupselect'] == "none") {
+          if ($mybb->get_input('groupselect') == "none") {
             $grpstring = "";
           }
 
@@ -932,7 +1032,6 @@ function questsystem_admin_load()
       $page->output_header($lang->questsystem_name);
       $sub_tabs = questsystem_do_submenu();
       $page->output_nav_tabs($sub_tabs, 'questsystem_questtype_add');
-
 
       if (isset($errors)) {
         $page->output_inline_error($errors);
@@ -1165,7 +1264,7 @@ function questsystem_admin_load()
     // Management der Quests 
     // Übersicht, welche Quests gibt es, welche User bearbeiten sie gerade
     // Zuteilung von Quests an User die warten
-    if ($mybb->input['action'] == "questsystem_quest_manage") {
+    if ($mybb->get_input('action') == "questsystem_quest_manage") {
       $page->add_breadcrumb_item("Quests verwalten");
       $page->output_header($lang->questsystem_name);
       $sub_tabs = questsystem_do_submenu();
@@ -1313,7 +1412,7 @@ function questsystem_admin_load()
     }
 
     //Questtyp editieren
-    if ($mybb->input['action'] == "questsystem_edit") {
+    if ($mybb->get_input('action') == "questsystem_edit") {
       //edit questtype
       if ($mybb->request_method == "post") {
         //als erstes fangen wir Fehler und leere Eingaben ab
@@ -1564,7 +1663,7 @@ function questsystem_admin_load()
     }
 
     //Das Quest muss noch freigeschaltet werden. 
-    if ($mybb->input['action'] == "questsystem_activate_quest") {
+    if ($mybb->get_input('action') == "questsystem_activate_quest") {
       $id = $mybb->get_input('id', MyBB::INPUT_INT);
 
       if (empty($id)) {
@@ -1594,7 +1693,7 @@ function questsystem_admin_load()
           $insert = array(
             "uid" => $uid,
             "points" => $mybb->settings['questsystem_points'],
-            "reason" => "Punkte für einen Questvorschlag.",
+            "reason" => $lang->questsystem_sendQuestPoints,
             "date" => date("Y-m-d"),
           );
           $db->insert_query("questsystem_points", $insert);
@@ -1669,7 +1768,7 @@ function questsystem_admin_load()
     }
 
     //Einen Questtypen deaktivieren
-    if ($mybb->input['action'] == "questsystem_deactivate") {
+    if ($mybb->get_input('action') == "questsystem_deactivate") {
       $id = $mybb->get_input('id', MyBB::INPUT_INT);
 
       if (empty($id)) {
@@ -1709,7 +1808,7 @@ function questsystem_admin_load()
       die();
     }
 
-    if ($mybb->input['action'] == "questsystem_activate") {
+    if ($mybb->get_input('action') == "questsystem_activate") {
       $id = $mybb->get_input('id', MyBB::INPUT_INT);
 
       if (empty($id)) {
@@ -1751,7 +1850,7 @@ function questsystem_admin_load()
     }
 
     //Einen Questtypen löschen
-    if ($mybb->input['action'] == "questsystem_delete") {
+    if ($mybb->get_input('action') == "questsystem_delete") {
       $id = $mybb->get_input('id', MyBB::INPUT_INT);
       $get_type = $db->simple_select("questsystem_type", "*", "id={$id}");
       $del_type = $db->fetch_array($get_type);
@@ -1791,7 +1890,7 @@ function questsystem_admin_load()
       die();
     }
     // Ein Quest löschen
-    if ($mybb->input['action'] == "questsystem_delete_quest") {
+    if ($mybb->get_input('action') == "questsystem_delete_quest") {
       $id = $mybb->get_input('id', MyBB::INPUT_INT);
       $get_quest = $db->simple_select("questsystem_quest", "*", "id={$id}");
       $del_quest = $db->fetch_array($get_quest);
@@ -1832,7 +1931,7 @@ function questsystem_admin_load()
     }
 
     //Einem (oder mehreren) Usern ein Quest zuteilen
-    if ($mybb->input['action'] == "questsystem_quest_add_user") {
+    if ($mybb->get_input('action') == "questsystem_quest_add_user") {
       if ($mybb->request_method == "post") {
         $questid = $mybb->get_input('id', MyBB::INPUT_INT);
         $questinfo = $db->fetch_array($db->simple_select("questsystem_quest", "*", "id = {$questid}"));
@@ -1976,30 +2075,32 @@ function questsystem_admin_load()
  */
 function questsystem_do_submenu()
 {
+  global $lang;
+  $lang->load("questsystem");
   //Übersicht
   $sub_tabs['questsystem'] = [
-    "title" => "Übersicht",
+    "title" => $lang->questsystem_overview,
     "link" => "index.php?module=config-questsystem",
     "description" => "Eine Übersicht aller Questtypen"
   ];
 
   //Questtyp anlegen
   $sub_tabs['questsystem_questtype_add'] = [
-    "title" => "Questtyp erstellen",
+    "title" => $lang->questsystem_manage_createquesttype,
     "link" => "index.php?module=config-questsystem&amp;action=questsystem_questtype_add",
     "description" => "Einen Questtyp anlegen."
   ];
 
   //Quest anlegen
   $sub_tabs['questsystem_quest_add'] = [
-    "title" => "Quest erstellen",
+    "title" => $lang->questsystem_manage_addquest,
     "link" => "index.php?module=config-questsystem&amp;action=questsystem_quest_add",
     "description" => "Ein Quest anlegen"
   ];
 
   //Übersicht welches Mitglied/hat welche Aufgabe
   $sub_tabs['questsystem_quest_manage'] = [
-    "title" => "Quest Verwaltung",
+    "title" => $lang->questsystem_management,
     "link" => "index.php?module=config-questsystem&amp;action=questsystem_quest_manage",
     "description" => "Welches Mitglied hat gerade welches Quest - Übersicht und Verwaltung"
   ];
@@ -2015,7 +2116,7 @@ function questsystem_do_submenu()
 $plugins->add_hook("member_profile_end", "questsystem_member_profile");
 function questsystem_member_profile()
 {
-  global $memprofile, $db, $mybb, $templates;
+  global $memprofile, $db, $mybb, $templates, $questsystem_member_bit, $questsystem_member;
   $questsystem_member_bit = "";
   $questsystem_member = "";
   if ($mybb->settings['questsystem_points_generell']) {
@@ -2055,7 +2156,7 @@ function questsystem_show()
   if (!$mybb->get_input('action') == "questsystem") return;
 
   if ($mybb->get_input('action') == "questsystem") {
-
+    $formgroup = "";
     $lang->load('questsystem');
     add_breadcrumb($lang->questsystem_name, "misc.php?action=misc.php?action=questsystem");
     eval("\$questsystem_nav = \"" . $templates->get("questsystem_nav") . "\";");
@@ -2068,6 +2169,7 @@ function questsystem_show()
 
     //rpgawards_scores_main{$isgroup}
     $questsystem_misc_main = "";
+    $takequest = "";
     //welches tab soll Default zu sehen sein?
     $tabtoshow = $mybb->settings['questsystem_defaulttab'];
     //tabs ja oder nein?
@@ -2079,77 +2181,48 @@ function questsystem_show()
 
       $isAllowed = questsystem_isAllowed($type, $thisuser);
 
-      if (is_member($type['groups'], $thisuser)) {
-        // // welchen typ haben wir
+      if ($isAllowed) {
+        // welchen typ haben wir
         $quest_type = $type['name'];
+
         if ($type['enddays'] != 0) {
-          $daysend = "<span><b>Zeitraum:</b> {$type['enddays']} Tage</span>";
+          $daysend = $lang->sprintf($lang->questsystem_timeperiode_days, $type['enddays']);
         } else {
-          $daysend = "<span><b>Zeitraum:</b> Keine Begrenzung</span>";
+          $daysend = $lang->questsystem_timeperiode_none;
         }
+
         if ($type['admin_assignment'] == 1) {
-          $admin = "<span><b>Quest wird von einem Admin zugeteilt.</b></span>";
-          // misc.php?action=questsystem&type={$quest_type}&id={$type['id']}
+          $admin = $lang->questsystem_admin_allocation;
+
           if ($type['groupquest'] == 1) {
-            $formgroup = "
-              <span class=\"groupquest\"><br/>Möchtest du ein Gruppenquest erledigen? <br/>
-              Dann trage hier deinen Partner ein, sonst lasse das Feld leer. 
-              <br/>
-              <b>Achtung:</b> vor dem Eintragen, abklären ob der User einverstanden ist.<br/>
-             
-              <input type=\"text\" autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\"
-              class=\"select2-input select2-default\" id=\"s2id_autogen1\" tabindex=\"1\" placeholder=\"\" name=\"partners\"><br/><br/>
-              </span>
-            ";
+            eval("\$formgroup = \"" . $templates->get("questsystem_form_grouprequest") . "\";");
           } else {
             $formgroup = "";
           }
-          $takequest = "
-            <form id=\"{$quest_type}\" method=\"post\" action=\"\">
-            <input type=\"hidden\" name=\"id\" value=\"{$type['id']}\"\>
-            <input type=\"hidden\" name=\"type\" value=\"{$quest_type}\"\>
-            " . $formgroup . "
-            <input type=\"submit\" id=\"{$quest_type}\" name=\"take_waiting\" value=\"Quest anfordern\"/>
-            </form>
-            ";
+          eval("\$takequest = \"" . $templates->get("questsystem_form_takequest") . "\";");
         } else {
-          $admin = "<span><b>Quest wird zufällig gezogen.</b></span>";
+          $admin = $lang->questsystem_admin_allocation_none;
           if ($type['groupquest'] == 1) {
-            $formgroup = "
-              <span class=\"groupquest\"><br/>Möchtest du ein Gruppenquest erledigen? <br/>
-              Dann trage hier deinen Partner ein, sonst lasse das Feld leer. 
-              <br/>
-              <b>Achtung:</b> vor dem Eintragen, abklären ob der User einverstanden ist.<br/>
-             
-              <input type=\"text\" autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\"
-              class=\"select2-input select2-default\" id=\"s2id_autogen1\" tabindex=\"1\" placeholder=\"\" name=\"partners\"><br/><br/>
-              </span>
-            ";
+            eval("\$formgroup = \"" . $templates->get("questsystem_form_grouprequest") . "\";");
           } else {
             $formgroup = "";
           }
-          $takequest = "
-          <form id=\"{$quest_type}\" method=\"post\" action=\"misc.php?action=questsystem&type={$quest_type}\">
-          <input type=\"hidden\" value=\"{$type['id']}\" name=\"questid\"/>
-          " . $formgroup . "
-          <input type=\"submit\" id=\"{$quest_type}\" name=\"take_random\" value=\"Quest ziehen\"/>
-          </form>
-          ";
+          eval("\$takequest = \"" . $templates->get("questsystem_form_takequest_random") . "\";");
         }
         if ($type['points_add'] != 0) {
-          $pointsadd = "<span><b>Punkte bei Erfolg:</b> {$type['points_add']} Punkte</span>";
+          $pointsadd = $lang->sprintf($lang->questsystem_points_for_quest, $type['points_add']);
         } else {
           $pointsadd = "";
         }
         if ($type['points_minus'] != 0) {
-          $pointsminus = "<span><b>Punktabzug:</b> {$type['points_minus']} Punkte</span>";
+          $pointsminus = $lang->sprintf($lang->questsystem_points_for_quest_minus, $type['points_minus']);
         } else {
           $pointsminus = "";
         }
         if ($type['finish_typ'] == "post") {
-          $success = "<span>Quest wird mit einem Post beendet.</span>";
+          $success = $lang->questsystem_end_post;
         } else {
-          $success = "<span>Quest wird mit einer Szene beendet.</span>";
+          $success = $lang->questsystem_end_scene;
         }
 
         if ($mybb->input['take_waiting']) {
@@ -2257,7 +2330,7 @@ function questsystem_show()
         $type['name'] = $type['name'] . " - ID: " . $questdata['id'];
         if ($quest['qid'] == 0) {
           $daysend  = "";
-          $waiting = "<span>wartet auf Zuteilung</span>";
+          $waiting = $lang->questsystem_waiting;
           $success = "";
           $submitted = "";
         } else {
@@ -2270,25 +2343,26 @@ function questsystem_show()
           // $progress_state = $db->fetch_field($db->simple_select("questsystem_quest_user", "done", "id = {$quest['id']}"), "done");
           $type['typedescr'] = htmlspecialchars_uni($type['typedescr']);
           if ($type['enddays'] != 0) {
-            $daysend = "<span><b>Bis zum:</b> {$enddate}</span>";
+            $daysend = $lang->sprintf($lang->questsystem_daysuntil, $enddate);
           } else {
-            $daysend = "<span><b>Bis zum:</b> Keine Begrenzung</span>";
+            $daysend = $lang->questsystem_daysuntil_none;
           }
           if ($type['finish_typ'] == "post") {
-            $success = "<span>Quest wird mit einem Post beendet.</span>";
+            $success = $lang->questsystem_end_post;
           } else {
-            $success = "<span>Quest wird mit einer Szene beendet.</span>";
+            $success = $lang->questsystem_end_scene;
           }
           if ($type['points_add'] != 0) {
-            $pointsadd = "<span><b>Punkte bei Erfolg:</b> {$type['points_add']} Punkte</span>";
+            $pointsadd = $lang->sprintf($lang->questsystem_points_for_quest, $type['points_add']);
           } else {
             $pointsadd = "";
           }
           if ($type['points_minus'] != 0) {
-            $pointsminus = "<span><b>Punktabzug:</b> {$type['points_minus']} Punkte</span>";
+            $pointsminus = $lang->sprintf($lang->questsystem_points_for_quest_minus, $type['points_minus']);
           } else {
             $pointsminus = "";
           }
+
           if ($questdata['groupquest'] == 1) {
             $getpartners = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = {$uid} AND qid = {$quest['qid']}"));
             $partner_arr = explode(",", $getpartners['groups']);
@@ -2305,7 +2379,7 @@ function questsystem_show()
             $group = "";
           }
           if ($quest['done'] == 2) {
-            $submitted = "<span><b>Quest wurde eingereicht.</b></span>";
+            $submitted = $lang->questsystem_submitted;
           } else {
             $submitted = "";
           }
@@ -2360,7 +2434,7 @@ function questsystem_show()
           $success = "<span>Quest ist abgelaufen am <b>{$enddatestr}</b></span>";
 
           if ($type['points_minus'] != 0) {
-            $pointsminus = "<span><b>Punktabzug:</b> {$type['points_add']} Punkte</span>";
+            $pointsminus = $lang->sprintf($lang->questsystem_points_for_quest_minus, $type['points_minus']);
             $pointsadd = "";
           } else {
             $pointsminus = "";
@@ -2549,7 +2623,7 @@ function questsystem_global()
 $plugins->add_hook("index_start", "questsystem_index");
 function questsystem_index()
 {
-  global $mybb, $db, $userbirthday, $lastregusers, $templates, $questsystem_index_mod;
+  global $mybb, $db, $markup, $templates, $questsystem_index_mod, $questsystem_index_mod_bit;
 
   if ($mybb->usergroup['canmodcp'] == 1) {
     $modflag = 0;
@@ -2562,26 +2636,7 @@ function questsystem_index()
       $markup = "";
       // punkte wenn quest eingereicht. 
       while ($quest_in = $db->fetch_array($admincheck)) {
-        $markup = "<div class=\"quest_index__item\"><b>Questvorschlag</b><br/>
-      <p class=\"quest_index_descr\">{$quest_in['name']}: 
-      {$quest_in['questdescr']}<br/>
-      <a href=\"admin/index.php?module=config-questsystem&action=questsystem_quest_manage\">[hier freischalten]</a> 
-      <a href=\"private.php?action=send&uid={$quest_in['uid']}\">[ Nachfragen(PN) ]</a> 
-      <a onclick=\"$('#editquest{$quest_in['id']}').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== 'undefined' ? modal_zindex : 9999) }); return false;\" style=\"cursor: pointer;\">[edit infos]</a>      </span>
-
-      <div class=\"modal editquest\" id=\"editquest{$quest_in['id']}\" style=\"display: none; padding: 10px; margin: auto; text-align: center;\">
-      <form action=\"\" id=\"formeditscene\" method=\"post\" >
-      <input type=\"hidden\" value=\"{$quest_in['id']}\" name=\"id\" id=\"id\"/>
-      <center>
-      <input type=\"text\" name=\"questtyp\" id=\"questtyp\" placeholder=\"queststyp 1 oder 2\" value=\"{$quest_in['type']}\" /><br>
-      1 für 'plottasks' oder 2 für 'userquests'<br><br>
-      <textarea name=\"questdescr\" id=\"questdescr\" placeholder=\"Beschreibung\" style=\"height: 80px;\"> {$quest_in['questdescr']}</textarea><br>
-           </form>
-      <button name=\"edit_questin\" id=\"editquestin\">Submit</button>
-  </div>
-      </p>
-
-      </div>";
+        eval("\$markup = \"" . $templates->get("questsystem_index_mod_bit_quest") . "\";");
         eval("\$questsystem_index_mod_bit .= \"" . $templates->get("questsystem_index_mod_bit") . "\";");
       }
     }
@@ -2591,14 +2646,7 @@ function questsystem_index()
     //alert an user wenn zugeteilt
     if ($db->num_rows($userwaits) > 0) {
       $modflag = 1;
-      $markup = "<div class=\"quest_index__item\">
-      <b>Questzuteilung</b><br/>
-      Mindestens ein User wartet auf Questzuteilung.<br/>
-      <span class=\"quest_index_descr\">
-      <a href=\"admin/index.php?module=config-questsystem&action=questsystem_quest_manage\">[hier zuteilen]</a> 
-      </span>
-      </div>";
-
+      eval("\$markup = \"" . $templates->get("questsystem_index_mod_bit_user") . "\";");
       eval("\$questsystem_index_mod_bit .= \"" . $templates->get("questsystem_index_mod_bit") . "\";");
     }
     // -> quest wurde beendet und eingereicht
@@ -2611,15 +2659,7 @@ function questsystem_index()
         $questinfo = $db->fetch_array($db->simple_select("questsystem_type", "*", "id = {$quest_sub['qtid']}"));
         $questdetail = $db->fetch_array($db->simple_select("questsystem_quest", "*", "id = {$quest_sub['qid']}"));
         $username = build_profile_link($userinfo['username'], $quest_sub['uid']);
-        $markup = "<div class=\"quest_index__item\">
-      <span class=\"quest_index_descr\"><b>Quest Einreichung:</b><br/>" . $username . " hat ein  <a href=\"showthread.php?tid={$quest_sub['tid']}&pid={$quest_sub['pid']}#pid{$quest_sub['pid']}\">Quest eingereicht.</a><br/>
-      -> {$questinfo['finish_typ']} ist relevant.<br/><br/>
-      Quest: <i>{$questdetail['questdescr']} </i><br/>
-      <a href=\"index.php?action=questaccept&id={$quest_sub['id']}&qtid={$quest_sub['qtid']}&qid={$quest_sub['qid']}&uid={$quest_sub['uid']}\">[accept]</a> 
-      <a href=\"index.php?action=questdeny&id={$quest_sub['id']}&qtid={$quest_sub['qtid']}&qid={$quest_sub['qid']}&uid={$quest_sub['uid']}\">[deny]</a> 
-
-
-      </div>";
+        eval("\$markup = \"" . $templates->get("questsystem_index_mod_bit_submit") . "\";");
         eval("\$questsystem_index_mod_bit .= \"" . $templates->get("questsystem_index_mod_bit") . "\";");
       }
     }
