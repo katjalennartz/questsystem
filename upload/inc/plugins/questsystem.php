@@ -766,6 +766,7 @@ function questsystem_activate()
   include MYBB_ROOT . "/inc/adminfunctions_templates.php";
   find_replace_templatesets("index", "#" . preg_quote('{$header}') . "#i", '{$header}{$questsystem_index_mod}');
   find_replace_templatesets("postbit", "#" . preg_quote('{$post[\'button_edit\']}') . "#i", '{$post[\'questbutton\']}{$post[\'button_edit\']}');
+  find_replace_templatesets("member_profile", "#" . preg_quote('{$awaybit}') . "#i", '{$awaybit}{$questsystem_member}');
 
   //Default Berechtigungen für Admins
   change_admin_permission('config', 'questsystem', 1);
@@ -823,6 +824,7 @@ function questsystem_deactivate()
   include MYBB_ROOT . "/inc/adminfunctions_templates.php";
   find_replace_templatesets("index", "#" . preg_quote('{$questsystem_index_mod}') . "#i", '');
   find_replace_templatesets("postbit", "#" . preg_quote('{$post[\'questbutton\']}') . "#i", '');
+  find_replace_templatesets("member_profile", "#" . preg_quote('{$questsystem_member}') . "#i", '');
 }
 
 /**
