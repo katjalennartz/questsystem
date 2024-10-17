@@ -2099,7 +2099,7 @@ function questsystem_do_submenu()
     "link" => "index.php?module=config-questsystem&amp;action=questsystem_quest_add",
     "description" => "Ein Quest anlegen"
   ];
-
+  
   //Übersicht welches Mitglied/hat welche Aufgabe
   $sub_tabs['questsystem_quest_manage'] = [
     "title" => $lang->questsystem_management,
@@ -2123,7 +2123,7 @@ function questsystem_member_profile()
   $questsystem_member = "";
   if ($mybb->settings['questsystem_points_generell']) {
     $uid = $memprofile['uid'];
-    $points_sum = $db->write_query("SELECT sum(points) as total, uid FROM `" . TABLE_PREFIX . "questsystem_points` WHERE uid = '{$memprofile['uid']}' GROUP BY uid ");
+    $points_sum = $db->fetch_field($db->write_query("SELECT sum(points) as total, uid FROM `" . TABLE_PREFIX . "questsystem_points` WHERE uid = '{$memprofile['uid']}' GROUP BY uid "), "total");
     $get_all_points = $db->simple_select("questsystem_points", "*", "uid = {$uid}", array("order_by" => "date", "order_dir" => "desc"));
     while ($userpoints = $db->fetch_array($get_all_points)) {
       if ($userpoints['points'] == 1 or $userpoints['points'] == -1) {
