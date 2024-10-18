@@ -2808,22 +2808,21 @@ function questsystem_isAllowed($type, $thisuser)
   global $db, $mybb;
   $grouparray = array();
   if (is_member($type['groups'], $thisuser)) {
-
-    if ($type['group_str'] != "0") {
-      $grouparray = explode(",", trim($type['group_str']));
-      if (is_numeric($type['group_fid'])) {
-        $group = trim($db->fetch_field($db->simple_select("userfields", "fid" . $type['group_fid'], "ufid = '{$thisuser}'"), "fid" . $type['group_fid']));
-        return in_array($group, $grouparray);
-      } else {
-        $fieldid = $db->fetch_field($db->simple_select("application_ucp_fields", "id", "fieldname = '" . $type['group_fid'] . "'"), "id");
-        $group = $db->fetch_field($db->simple_select("application_ucp_userfields", "*", "uid = {$thisuser} AND fieldid = '{$fieldid}'"), "value");
-        return in_array($group, $grouparray);
-      }
-    }
     return true;
+  } else if ($type['group_str'] != "0") {
+    $grouparray = explode(",", trim($type['group_str']));
+    if (is_numeric($type['group_fid'])) {
+      $group = trim($db->fetch_field($db->simple_select("userfields", "fid" . $type['group_fid'], "ufid = '{$thisuser}'"), "fid" . $type['group_fid']));
+      return in_array($group, $grouparray);
+    } else {
+      $fieldid = $db->fetch_field($db->simple_select("application_ucp_fields", "id", "fieldname = '" . $type['group_fid'] . "'"), "id");
+      $group = $db->fetch_field($db->simple_select("application_ucp_userfields", "*", "uid = {$thisuser} AND fieldid = '{$fieldid}'"), "value");
+      return in_array($group, $grouparray);
+    }
   } else {
     return false;
   }
+  return false;
 }
 
 /****
