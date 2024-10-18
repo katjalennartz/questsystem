@@ -653,7 +653,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     
     .questrules span {
       display: inline-block;
-      width: 1000%;
+      width: 100%;
       padding-left: 10px;}
     
     .questtypbit {
