@@ -5,13 +5,20 @@ $l['questsystem_description'] = "Questsystem für RPGs, Aufgaben für bestimmte 
 $l['questsystem_author'] = "risuena";
 $l['questsystem_web'] = "https://github.com/katjalennartz";
 
+$l['questsystem_overview'] = "Übersicht";
+
+
 $l['questsystem_adminsetting'] = "Darf das Questsystem verwalten?";
 //Questtyp Übersicht
 $l['questsystem_manage_overview'] = "Questsystem Overview";
 $l['questsystem_manage_options'] = "Optionen";
 
+$l['questsystem_sendQuestPoints'] = 'Punkte für einen Questvorschlag.';
+
 //Questtyp anlegen
 $l['questsystem_manage_createquesttype'] = "Questsystem Questtyp anlegen";
+$l['questsystem_manage_addquest'] = "Quest erstellen";
+$l['questsystem_management'] = "Quest Verwaltung";
 
 $l['questsystem_manage_cqt_formname'] = "Name: <em>*</em>";
 $l['questsystem_manage_cqt_formname_descr'] = "Wie heißt der Questtyp?";
@@ -122,6 +129,3 @@ $l['questsystem_manage_cqt_admincheck'] = "Quest Freischalten";
 $l['questsystem_manage_cqt_admincheck_back'] = "Quest Zurücknehmen";
 
 $l['questsystem_manage_cqt_admincheck_success'] = "Quest erfolgreich freigeschaltet/zurückgenommen";
-
-
-?>
