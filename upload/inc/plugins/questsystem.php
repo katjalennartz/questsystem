@@ -62,7 +62,7 @@ function questsystem_install()
     `unique` int(1) NOT NULL DEFAULT 0,    
     `delete` int(1) NOT NULL DEFAULT 0,    
     `groupquest` int(1) NOT NULL DEFAULT 1,
-    `group_str` varchar(150) NOT NULL DEFAULT 1,
+    `group_str` varchar(500) NOT NULL DEFAULT 1,
     `group_fid` varchar(150) NOT NULL DEFAULT 1,
     `finish_typ` varchar(50) NOT NULL DEFAULT 'post',
     `user_add` int(1) NOT NULL DEFAULT 0,
@@ -185,25 +185,25 @@ function questsystem_install()
   );
   $db->insert_query("templategroups", $templategrouparray);
 
-  $template[0] = array(
+  $template[] = array(
     "title" => 'questsystem_index_mod',
     "template" => '<div class="reservations_index pm_alert">
     {$questsystem_index_mod_bit}
       </div>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[1] = array(
+  $template[] = array(
     "title" => 'questsystem_index_mod_bit',
     "template" => '{$markup}',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[2] = array(
+  $template[] = array(
     "title" => 'questsystem_misc_done',
     "template" => '<html>
     <head>
@@ -244,11 +244,11 @@ Hier hast du eine Übersicht über die Quests,  die abgelaufen sind, ohne dass d
     </body>
     </html>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[3] = array(
+  $template[] = array(
     "title" => 'questsystem_misc_main',
     "template" => '<html>
     <head>
@@ -334,11 +334,11 @@ if(use_xmlhttprequest == "1")
     </body>
     </html>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[4] = array(
+  $template[] = array(
     "title" => 'questsystem_misc_progress',
     "template" => '<html>
     <head>
@@ -372,10 +372,10 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     </body>
     </html>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
-  $template[5] = array(
+  $template[] = array(
     "title" => 'questsystem_misc_quests_done',
     "template" => '{$username_tit}
     <div class="questtypbit">
@@ -393,11 +393,11 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
       </div>
     </div>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[6] = array(
+  $template[] = array(
     "title" => 'questsystem_misc_quests_progress',
     "template" => '{$username_tit}
     <div class="questtypbit">
@@ -417,11 +417,11 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
       </div>
     </div>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[7] = array(
+  $template[] = array(
     "title" => 'questsystem_misc_questtypbit',
     "template" => '<div class="questtypbit">
     <h2>{$type[\\\'name\\\']}</h2>
@@ -440,10 +440,10 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     </div>
   </div>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
-  $template[8] = array(
+  $template[] = array(
     "title" => 'questsystem_misc_submit',
     "template" => '<html>
     <head>
@@ -487,11 +487,11 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     </body>
     </html>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[9] = array(
+  $template[] = array(
     "title" => 'questsystem_nav',
     "template" => '<div class="questshow__item questshow-nav">
     <div class="nav__item">
@@ -508,20 +508,20 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     </div>
   </div>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[10] = array(
+  $template[] = array(
     "title" => 'questsystem_member_bit',
     "template" => '<span class="questsystem__points"><strong>{$punkte}</strong> » {$reason} » {$date}</span>
 ',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[11] = array(
+  $template[] = array(
     "title" => 'questsystem_member',
     "template" => '
     <div class="questsystem__profile">
@@ -533,12 +533,12 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
       </div>
     ',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
 
-  $template[12] = array(
+  $template[] = array(
     "title" => 'questsystem_form_grouprequest',
     "template" => '
           <span class="groupquest"><br/>Möchtest du ein Gruppenquest erledigen? <br/>
@@ -551,11 +551,11 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
           </span>
     ',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[13] = array(
+  $template[] = array(
     "title" => 'questsystem_form_takequest',
     "template" => '<form id="{$quest_type}" method="post" action="">
             <input type="hidden" name="id" value="{$type[\\\'id\\\']}">
@@ -565,11 +565,11 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
             </form>
     ',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[14] = array(
+  $template[] = array(
     "title" => 'questsystem_form_takequest_random',
     "template" => '<form id="{$quest_type}" method="post" action="misc.php?action=questsystem&type={$quest_type}">
           <input type="hidden" value="{$type[\\\'id\\\']}" name="questid"/>
@@ -578,11 +578,11 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
           </form>
     ',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[14] = array(
+  $template[] = array(
     "title" => 'questsystem_index_mod_bit_quest',
     "template" => '<div class="quest_index__item"><b>Questvorschlag</b><br/>
       <p class="quest_index_descr">{$quest_in[\\\'name\\\']}: 
@@ -605,11 +605,11 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
 
       </div>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[15] = array(
+  $template[] = array(
     "title" => 'questsystem_index_mod_bit_user',
     "template" => '<div class="quest_index__item">
       <b>Questzuteilung</b><br/>
@@ -619,11 +619,11 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
       </span>
       </div>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[16] = array(
+  $template[] = array(
     "title" => 'questsystem_index_mod_bit_submit',
     "template" => '<div class="quest_index__item">
       <span class="quest_index_descr"><b>Quest Einreichung:</b><br/>{$username} hat ein  <a href="showthread.php?tid={$quest_sub[\\\'tid\\\']}&pid={$quest_sub[\\\'pid\\\']}#pid{$quest_sub[\\\'pid\\\']}">Quest eingereicht.</a><br/>
@@ -633,7 +633,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
       <a href="index.php?action=questdeny&id={$quest_sub[\\\'id\\\']}&qtid={$quest_sub[\\\'qtid\\\']}&qid={$quest_sub[\\\'qid\\\']}&uid={$quest_sub[\\\'uid\\\']}">[deny]</a> 
       </div>',
     "sid" => "-2",
-    "version" => "1.0",
+    "version" => "",
     "dateline" => TIME_NOW
   );
 
@@ -2099,7 +2099,7 @@ function questsystem_do_submenu()
     "link" => "index.php?module=config-questsystem&amp;action=questsystem_quest_add",
     "description" => "Ein Quest anlegen"
   ];
-  
+
   //Übersicht welches Mitglied/hat welche Aufgabe
   $sub_tabs['questsystem_quest_manage'] = [
     "title" => $lang->questsystem_management,
@@ -2153,7 +2153,7 @@ function questsystem_member_profile()
 $plugins->add_hook("misc_start", "questsystem_show");
 function questsystem_show()
 {
-  global $db, $mybb, $templates, $header, $footer, $theme, $headerinclude, $lang;
+  global $db, $mybb, $templates, $header, $footer, $theme, $headerinclude, $lang, $takequest;
 
   if (!$mybb->get_input('action') == "questsystem") return;
 
@@ -2808,6 +2808,7 @@ function questsystem_isAllowed($type, $thisuser)
   global $db, $mybb;
   $grouparray = array();
   if (is_member($type['groups'], $thisuser)) {
+
     if ($type['group_str'] != "0") {
       $grouparray = explode(",", trim($type['group_str']));
       if (is_numeric($type['group_fid'])) {
@@ -2819,6 +2820,7 @@ function questsystem_isAllowed($type, $thisuser)
         return in_array($group, $grouparray);
       }
     }
+    return true;
   } else {
     return false;
   }
