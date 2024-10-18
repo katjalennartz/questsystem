@@ -1896,7 +1896,7 @@ function questsystem_admin_load()
       $id = $mybb->get_input('id', MyBB::INPUT_INT);
       $get_quest = $db->simple_select("questsystem_quest", "*", "id={$id}");
       $del_quest = $db->fetch_array($get_quest);
-
+      var_dump($del_quest);
       if (empty($id)) {
         flash_message($lang->questsystem_manage_cqt_delete_error, 'error');
         admin_redirect("index.php?module=config-questsystem");
@@ -1913,15 +1913,17 @@ function questsystem_admin_load()
         if ($mybb->request_method == "post") {
           // $typename = $db->fetch_field($db->simple_select("questsystem_quest", "*", "type='{$id}'"), "type");
           //dazugehörige Quests löschen
-          $db->delete_query("questsystem_quest", "type='{$id}'");
+          $db->delete_query("questsystem_quest", "id='{$id}'");
+
           //dazugehörige Quests der User löschen
           $db->delete_query("questsystem_quest_user", "qtid='{$id}'");
-          $db->delete_query("questsystem_type", "id='{$id}'");
+          
           $mybb->input['module'] = "questsystem";
+
           $mybb->input['action'] = $lang->questsystem_manage_cqt_delete_tit;
           log_admin_action(htmlspecialchars_uni($del_quest['name']) . "(id: {$id})");
           flash_message($lang->questsystem_manage_cqt_delete_success, 'success');
-          admin_redirect("index.php?module=config-questsystem");
+          admin_redirect("index.php?module=config-questsystem&action=questsystem_quest_manage");
         } else {
           $page->output_confirm_action(
             "index.php?module=config-questsystem&amp;action=questsystem_delete_quest&amp;id={$id}",
