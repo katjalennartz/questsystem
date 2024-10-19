@@ -44,6 +44,12 @@ function questsystem_is_installed()
 function questsystem_install()
 {
   global $db, $cache;
+  // RPG Stuff Modul muss vorhanden sein
+  if (!file_exists(MYBB_ADMIN_DIR . "/modules/rpgstuff/module_meta.php")) {
+    flash_message("Das ACP Modul <a href=\"https://github.com/little-evil-genius/rpgstuff_modul\" target=\"_blank\">\"RPG Stuff\"</a> muss vorhanden sein!", 'error');
+    admin_redirect('index.php?module=config-plugins');
+  }
+
   questsystem_uninstall();
 
   questsystem_add_db();
@@ -71,76 +77,7 @@ function questsystem_install()
   $cache->update_tasks();
 
 
-  $css = array(
-    'name' => 'questsystem.css',
-    'tid' => 1,
-    'attachedto' => '',
-    "stylesheet" =>    '
-    .questrules {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    
-    .questrules span {
-      display: inline-block;
-      width: 100%;
-      padding-left: 10px;}
-    
-    .questtypbit {
-      margin: 10px 0px;
-      margin-bottom: 30px;
-      padding: 10px;
-      padding-top: 0px;
-      border: 5px solid var(--tabel-color);
-    }
-    
-    .questshow-container {
-      gap: 12px;
-      display: grid;
-      grid-template-columns: 1fr 5fr;
-    }
-    
-    .nav__item {
-      padding: 5px;
-      background-color: var(--tabel-color);
-      margin: 2px;
-      text-align: center;
-    }
-    
-    .questshow__item.questshow-nav {
-      padding-top: 5px;
-      padding-left: 5px;
-    }
-    
-    .questsystem h1 {
-      text-align: center;
-    }
-    
-    #submitquestform {
-        display: flex; 
-        flex-wrap: wrap;
-        width: 100%;
-        justify-content: center;
-    
-    }
-    
-    .submitquestform__item {
-        width:100%;
-        text-align: center;
-    }
-    .submitquestform__item input,
-    .submitquestform__item select,
-    .submitquestform__item textarea {
-        width:50%;
-    }
-     #submit_quest {
-        margin: 10px 0px;
-        width:100px;
-    }
-    ',
-    'cachefile' => $db->escape_string(str_replace('/', '', 'questsystem.css')),
-    'lastmodified' => time()
-  );
+  $css = questsystem_stylesheet();
 
   require_once MYBB_ADMIN_DIR . "inc/functions_themes.php";
 
@@ -199,7 +136,7 @@ function questsystem_activate()
   find_replace_templatesets("member_profile", "#" . preg_quote('{$awaybit}') . "#i", '{$awaybit}{$questsystem_member}');
 
   //Default Berechtigungen für Admins
-  change_admin_permission('config', 'questsystem', 1);
+  change_admin_permission('rpgstuff', 'questsystem', 1);
 
   if (function_exists('myalerts_is_activated') && myalerts_is_activated()) {
 
@@ -260,8 +197,9 @@ function questsystem_deactivate()
 /**
  * action handler fürs ACP -> Konfiguration
  */
-$plugins->add_hook("admin_config_action_handler", "questsystem_admin_config_action_handler");
-function questsystem_admin_config_action_handler(&$actions)
+$plugins->add_hook("admin_rpgstuff_action_handler", "questsystem_admin_rpgstuff_action_handler");
+// $plugins->add_hook("admin_config_action_handler", "questsystem_admin_config_action_handler");
+function questsystem_admin_rpgstuff_action_handler(&$actions)
 {
   $actions['questsystem'] = array('active' => 'questsystem', 'file' => 'questsystem');
 }
@@ -269,8 +207,9 @@ function questsystem_admin_config_action_handler(&$actions)
 /**
  * Berechtigungen im ACP
  */
-$plugins->add_hook("admin_config_permissions", "questsystem_admin_config_permissions");
-function questsystem_admin_config_permissions(&$admin_permissions)
+$plugins->add_hook("admin_rpgstuff_permissions", "questsystem_admin_rpgstuff_permissions");
+// $plugins->add_hook("admin_config_permissions", "questsystem_admin_config_permissions");
+function questsystem_admin_rpgstuff_permissions(&$admin_permissions)
 {
   global $lang;
   $lang->load("questsystem");
@@ -283,8 +222,8 @@ function questsystem_admin_config_permissions(&$admin_permissions)
 /**
  * Menü im ACP einfügen
  */
-$plugins->add_hook("admin_config_menu", "questsystem_admin_config_menu");
-function questsystem_admin_config_menu(&$sub_menu)
+$plugins->add_hook("admin_rpgstuff_menu", "questsystem_admin_rpgstuff_menu");
+function questsystem_admin_rpgstuff_menu(&$sub_menu)
 {
   global $mybb, $lang;
   $lang->load("questsystem");
@@ -292,7 +231,7 @@ function questsystem_admin_config_menu(&$sub_menu)
   $sub_menu[] = [
     "id" => "questsystem",
     "title" => $lang->questsystem_name,
-    "link" => "index.php?module=config-questsystem"
+    "link" => "index.php?module=rpgstuff-questsystem"
   ];
 }
 
@@ -312,7 +251,7 @@ function questsystem_admin_load()
     return false;
   }
   // Übersicht 
-  if ($run_module == 'config' && $action_file == 'questsystem') {
+  if ($run_module == 'rpgstuff' && $action_file == 'questsystem') {
 
     // Allgemein - Welche Questsysteme gibt es
     if ($mybb->input['action'] == "" || !isset($mybb->input['action'])) {
@@ -329,7 +268,7 @@ function questsystem_admin_load()
 
       //Hier erstellen wir jetzt unsere ganzen Felder
       //erst brauchen wir ein Formular
-      $form = new Form("index.php?module=config-questsystem", "post");
+      $form = new Form("index.php?module=rpgstuff-questsystem", "post");
       $form_container = new FormContainer($lang->questsystem_manage_overview);
       $form_container->output_row_header($lang->questsystem_manage_overview);
       $form_container->output_row_header("<div style=\"text-align: center;\">{$lang->questsystem_manage_options}</div>");
@@ -343,24 +282,24 @@ function questsystem_admin_load()
         $popup = new PopupMenu("questsystem_{$questtype['id']}", "verwalten");
         $popup->add_item(
           "edit",
-          "index.php?module=config-questsystem&amp;action=questsystem_edit&amp;id={$questtype['id']}"
+          "index.php?module=rpgstuff-questsystem&amp;action=questsystem_edit&amp;id={$questtype['id']}"
         );
         if ($questtype['active'] == 1) {
           $popup->add_item(
             "deaktivieren",
-            "index.php?module=config-questsystem&amp;action=questsystem_deactivate&amp;id={$questtype['id']}"
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_deactivate&amp;id={$questtype['id']}"
               . "&amp;my_post_key={$mybb->post_code}"
           );
         } else {
           $popup->add_item(
             "aktivieren",
-            "index.php?module=config-questsystem&amp;action=questsystem_activate&amp;id={$questtype['id']}"
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_activate&amp;id={$questtype['id']}"
               . "&amp;my_post_key={$mybb->post_code}"
           );
         }
         $popup->add_item(
           "delete",
-          "index.php?module=config-questsystem&amp;action=questsystem_delete&amp;id={$questtype['id']}"
+          "index.php?module=rpgstuff-questsystem&amp;action=questsystem_delete&amp;id={$questtype['id']}"
             . "&amp;my_post_key={$mybb->post_code}"
         );
 
@@ -459,7 +398,7 @@ function questsystem_admin_load()
           $mybb->input['action'] = "Erfolgreich gespeichert";
           // log_admin_action("users: " . htmlspecialchars_uni(implode(",", $mybb->input['users'])) . " Questsystem:" . htmlspecialchars_uni(implode(",", $mybb->input['awards'])));
           flash_message("Erfolgreich gespeichert", 'success');
-          admin_redirect("index.php?module=config-questsystem");
+          admin_redirect("index.php?module=rpgstuff-questsystem");
           die(); //evt. wieder rauswerfen
         }
       }
@@ -474,7 +413,7 @@ function questsystem_admin_load()
       }
 
       //Erst einmal das Formular erstellen
-      $form = new Form("index.php?module=config-questsystem&amp;action=questsystem_questtype_add", "post", "", 1);
+      $form = new Form("index.php?module=rpgstuff-questsystem&amp;action=questsystem_questtype_add", "post", "", 1);
       $form_container = new FormContainer("Questtyp erstellen");
       $form_container->output_row(
         $lang->questsystem_manage_cqt_formname, //Name 
@@ -641,7 +580,7 @@ function questsystem_admin_load()
           $mybb->input['module'] = "questsystem";
           $mybb->input['action'] = "Erfolgreich gespeichert";
           flash_message("Erfolgreich gespeichert", 'success');
-          admin_redirect("index.php?module=config-questsystem");
+          admin_redirect("index.php?module=rpgstuff-questsystem");
           die();
         }
       }
@@ -655,7 +594,7 @@ function questsystem_admin_load()
       if (isset($errors)) {
         $page->output_inline_error($errors);
       }
-      $form = new Form("index.php?module=config-questsystem&amp;action=questsystem_quest_add", "post", "", 1);
+      $form = new Form("index.php?module=rpgstuff-questsystem&amp;action=questsystem_quest_add", "post", "", 1);
       $form_container = new FormContainer("Quest erstellen");
       $form_container->output_row(
         $lang->questsystem_manage_cqt_questname, //Name 
@@ -718,7 +657,7 @@ function questsystem_admin_load()
       //Alle Questtypen bekommen 
       $get_questtypes = $db->simple_select("questsystem_type", "*");
       //Unser form erstellen
-      $form = new Form("index.php?module=config-questsystem&amp;action=questsystem_quest_manage&amp;manage=quests", "post");
+      $form = new Form("index.php?module=rpgstuff-questsystem&amp;action=questsystem_quest_manage&amp;manage=quests", "post");
       $form_container = new FormContainer("Übersicht Quests der User nach Questtyp");
 
       //Die einzelnen Questtypen durchgehen
@@ -766,31 +705,31 @@ function questsystem_admin_load()
           if ($questtype['admin_assignment'] == 1) {
             $popup->add_item(
               "User zuteilen",
-              "index.php?module=config-questsystem&amp;action=questsystem_quest_add_user&amp;id={$quest['id']}"
+              "index.php?module=rpgstuff-questsystem&amp;action=questsystem_quest_add_user&amp;id={$quest['id']}"
             );
           }
           $popup->add_item(
             "delete",
-            "index.php?module=config-questsystem&amp;action=questsystem_delete_quest&amp;id={$quest['id']}"
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_delete_quest&amp;id={$quest['id']}"
               . "&amp;my_post_key={$mybb->post_code}"
           );
           $popup->add_item(
             "edit",
-            "index.php?module=config-questsystem&amp;action=questsystem_edit_quest&amp;id={$quest['id']}"
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_edit_quest&amp;id={$quest['id']}"
               . "&amp;my_post_key={$mybb->post_code}"
           );
           //Muss das Quest noch freigeschaltet werden? Dann entsprechend button anzeigen
           if ($quest['admincheck'] == 0) {
             $popup->add_item(
               "freischalten",
-              "index.php?module=config-questsystem&amp;action=questsystem_activate_quest&amp;id={$quest['id']}"
+              "index.php?module=rpgstuff-questsystem&amp;action=questsystem_activate_quest&amp;id={$quest['id']}"
                 . "&amp;my_post_key={$mybb->post_code}"
             );
           } else {
             // Hier kann es auch wieder zurückgenommen werden.
             $popup->add_item(
               "zurücknehmen",
-              "index.php?module=config-questsystem&amp;action=questsystem_deactivate_quest&amp;id={$quest['id']}"
+              "index.php?module=rpgstuff-questsystem&amp;action=questsystem_deactivate_quest&amp;id={$quest['id']}"
                 . "&amp;my_post_key={$mybb->post_code}"
             );
           }
@@ -886,7 +825,7 @@ function questsystem_admin_load()
           $mybb->input['module'] = "questsystem";
           $mybb->input['action'] = "Erfolgreich gespeichert";
           flash_message("Erfolgreich gespeichert", 'success');
-          admin_redirect("index.php?module=config-questsystem&action=questsystem_quest_manage");
+          admin_redirect("index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage");
           die();
         }
       }
@@ -904,7 +843,7 @@ function questsystem_admin_load()
       $questdata = $db->simple_select("questsystem_quest", "*", "id={$id}");
       $edit = $db->fetch_array($questdata);
 
-      $form = new Form("index.php?module=config-questsystem&amp;action=questsystem_edit_quest", "post", "", 1);
+      $form = new Form("index.php?module=rpgstuff-questsystem&amp;action=questsystem_edit_quest", "post", "", 1);
       echo $form->generate_hidden_field('id', $id);
       $form_container = new FormContainer("Quest editieren");
       $form_container->output_row(
@@ -945,7 +884,7 @@ function questsystem_admin_load()
       );
 
       $form_container->end();
-      $buttons[] = $form->generate_submit_button($lang->questsystem_manage_cqt_form_create);
+      $buttons[] = $form->generate_submit_button($lang->questsystem_manage_cqt_form_save);
       $form->output_submit_wrapper($buttons);
       $form->end();
       $page->output_footer();
@@ -1037,7 +976,7 @@ function questsystem_admin_load()
           $mybb->input['module'] = "questsystem";
           $mybb->input['action'] = "Erfolgreich gespeichert";
           flash_message("Erfolgreich gespeichert", 'success');
-          admin_redirect("index.php?module=config-questsystem");
+          admin_redirect("index.php?module=rpgstuff-questsystem");
           die(); //evt. wieder rauswerfen
         }
       }
@@ -1055,7 +994,7 @@ function questsystem_admin_load()
       $questtypedata = $db->simple_select("questsystem_type", "*", "id={$id}");
       $edit = $db->fetch_array($questtypedata);
 
-      $form = new Form("index.php?module=config-questsystem&amp;action=questsystem_edit&amp;id={$id}", "post", "", 1);
+      $form = new Form("index.php?module=rpgstuff-questsystem&amp;action=questsystem_edit&amp;id={$id}", "post", "", 1);
       $form_container = new FormContainer("Questtyp erstellen");
       echo $form->generate_hidden_field('qid', $id);
       $form_container->output_row(
@@ -1217,15 +1156,15 @@ function questsystem_admin_load()
 
       if (empty($id)) {
         flash_message($lang->questsystem_manage_cqt_admincheck_error, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
 
       if (isset($mybb->input['no']) && $mybb->input['no']) {
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
       if (!verify_post_check($mybb->input['my_post_key'])) {
         flash_message($lang->questsystem_manage_cqt_delete_error_auth, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       } else {
         if ($mybb->request_method == "post") {
           $questname = $db->fetch_field($db->simple_select("questsystem_quest", "*", "id='{$id}'"), "name");
@@ -1265,10 +1204,10 @@ function questsystem_admin_load()
           $mybb->input['action'] = $lang->questsystem_manage_cqt_admincheck;
           log_admin_action(htmlspecialchars_uni($questname));
           flash_message($lang->questsystem_manage_cqt_admincheck_success, 'success');
-          admin_redirect("index.php?module=config-questsystem&action=questsystem_quest_manage");
+          admin_redirect("index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage");
         } else {
           $page->output_confirm_action(
-            "index.php?module=config-questsystem&amp;action=questsystem_activate_quest&amp;id={$id}",
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_activate_quest&amp;id={$id}",
             $lang->questsystem_manage_cqt_admincheck
           );
         }
@@ -1281,15 +1220,15 @@ function questsystem_admin_load()
 
       if (empty($id)) {
         flash_message($lang->questsystem_manage_cqt_admincheck_error, 'error');
-        admin_redirect("index.php?module=config-questsystem&action=questsystem_quest_manage");
+        admin_redirect("index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage");
       }
 
       if (isset($mybb->input['no']) && $mybb->input['no']) {
-        admin_redirect("index.php?module=config-questsystem&action=questsystem_quest_manage");
+        admin_redirect("index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage");
       }
       if (!verify_post_check($mybb->input['my_post_key'])) {
         flash_message($lang->questsystem_manage_cqt_delete_error_auth, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       } else {
         if ($mybb->request_method == "post") {
           $questname = $db->fetch_field($db->simple_select("questsystem_quest", "*", "id='{$id}'"), "name");
@@ -1305,10 +1244,10 @@ function questsystem_admin_load()
           $mybb->input['action'] = $lang->questsystem_manage_cqt_admincheck_back;
           log_admin_action(htmlspecialchars_uni($questname));
           flash_message($lang->questsystem_manage_cqt_admincheck_success, 'success');
-          admin_redirect("index.php?module=config-questsystem");
+          admin_redirect("index.php?module=rpgstuff-questsystem");
         } else {
           $page->output_confirm_action(
-            "index.php?module=config-questsystem&amp;action=questsystem_deactivate_quest&amp;id={$id}",
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_deactivate_quest&amp;id={$id}",
             $lang->questsystem_manage_cqt_admincheck_back
           );
         }
@@ -1322,15 +1261,15 @@ function questsystem_admin_load()
 
       if (empty($id)) {
         flash_message($lang->questsystem_manage_cqt_deactivate_error, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
 
       if (isset($mybb->input['no']) && $mybb->input['no']) {
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
       if (!verify_post_check($mybb->input['my_post_key'])) {
         flash_message($lang->questsystem_manage_cqt_delete_error_auth, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       } else {
         if ($mybb->request_method == "post") {
           $typename = $db->fetch_field($db->simple_select("questsystem_type", "*", "id='{$id}'"), "name");
@@ -1346,10 +1285,10 @@ function questsystem_admin_load()
           $mybb->input['action'] = $lang->questsystem_manage_cqt_delete_tit;
           log_admin_action(htmlspecialchars_uni($typename));
           flash_message($lang->questsystem_manage_cqt_activate_success, 'success');
-          admin_redirect("index.php?module=config-questsystem");
+          admin_redirect("index.php?module=rpgstuff-questsystem");
         } else {
           $page->output_confirm_action(
-            "index.php?module=config-questsystem&amp;action=questsystem_deactivate&amp;id={$id}",
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_deactivate&amp;id={$id}",
             $lang->questsystem_manage_cqt_deactivate_msg
           );
         }
@@ -1362,15 +1301,15 @@ function questsystem_admin_load()
 
       if (empty($id)) {
         flash_message($lang->questsystem_manage_cqt_activate_error, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
 
       if (isset($mybb->input['no']) && $mybb->input['no']) {
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
       if (!verify_post_check($mybb->input['my_post_key'])) {
         flash_message($lang->questsystem_manage_cqt_delete_error_auth, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       } else {
 
         if ($mybb->request_method == "post") {
@@ -1387,10 +1326,10 @@ function questsystem_admin_load()
           $mybb->input['action'] = $lang->questsystem_manage_cqt_delete_tit;
           log_admin_action(htmlspecialchars_uni($typename));
           flash_message($lang->questsystem_manage_cqt_activate_success, 'success');
-          admin_redirect("index.php?module=config-questsystem");
+          admin_redirect("index.php?module=rpgstuff-questsystem");
         } else {
           $page->output_confirm_action(
-            "index.php?module=config-questsystem&amp;action=questsystem_activate&amp;id={$id}",
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_activate&amp;id={$id}",
             $lang->questsystem_manage_cqt_activate_msg
           );
         }
@@ -1406,16 +1345,16 @@ function questsystem_admin_load()
 
       if (empty($id)) {
         flash_message($lang->questsystem_manage_cqt_delete_error, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
 
       if (isset($mybb->input['no']) && $mybb->input['no']) {
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
 
       if (!verify_post_check($mybb->input['my_post_key'])) {
         flash_message($lang->questsystem_manage_cqt_delete_error_auth, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       } else {
         if ($mybb->request_method == "post") {
           // $typename = $db->fetch_field($db->simple_select("questsystem_quest", "*", "type='{$id}'"), "type");
@@ -1428,10 +1367,10 @@ function questsystem_admin_load()
           $mybb->input['action'] = $lang->questsystem_manage_cqt_delete_tit;
           log_admin_action(htmlspecialchars_uni($del_type['name']));
           flash_message($lang->questsystem_manage_cqt_delete_success, 'success');
-          admin_redirect("index.php?module=config-questsystem");
+          admin_redirect("index.php?module=rpgstuff-questsystem");
         } else {
           $page->output_confirm_action(
-            "index.php?module=config-questsystem&amp;action=questsystem_delete&amp;id={$id}",
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_delete&amp;id={$id}",
             $lang->questsystem_manage_cqt_delete_msg
           );
         }
@@ -1445,16 +1384,16 @@ function questsystem_admin_load()
       $del_quest = $db->fetch_array($get_quest);
       if (empty($id)) {
         flash_message($lang->questsystem_manage_cqt_delete_error, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
 
       if (isset($mybb->input['no']) && $mybb->input['no']) {
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       }
 
       if (!verify_post_check($mybb->input['my_post_key'])) {
         flash_message($lang->questsystem_manage_cqt_delete_error_auth, 'error');
-        admin_redirect("index.php?module=config-questsystem");
+        admin_redirect("index.php?module=rpgstuff-questsystem");
       } else {
         if ($mybb->request_method == "post") {
           // $typename = $db->fetch_field($db->simple_select("questsystem_quest", "*", "type='{$id}'"), "type");
@@ -1469,10 +1408,10 @@ function questsystem_admin_load()
           $mybb->input['action'] = $lang->questsystem_manage_cqt_delete_tit;
           log_admin_action(htmlspecialchars_uni($del_quest['name']) . "(id: {$id})");
           flash_message($lang->questsystem_manage_cqt_delete_success, 'success');
-          admin_redirect("index.php?module=config-questsystem&action=questsystem_quest_manage");
+          admin_redirect("index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage");
         } else {
           $page->output_confirm_action(
-            "index.php?module=config-questsystem&amp;action=questsystem_delete_quest&amp;id={$id}",
+            "index.php?module=rpgstuff-questsystem&amp;action=questsystem_delete_quest&amp;id={$id}",
             $lang->questsystem_manage_cqt_deletequest_msg
           );
         }
@@ -1536,7 +1475,7 @@ function questsystem_admin_load()
             }
           }
           flash_message("Erfolgreich gespeichert", 'success');
-          admin_redirect("index.php?module=config-questsystem&action=questsystem_quest_manage");
+          admin_redirect("index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage");
           die();
         }
       }
@@ -1559,7 +1498,7 @@ function questsystem_admin_load()
         //infos zum dazugehörigen Typen
         $questtypeinfo = $db->fetch_array($db->simple_select("questsystem_type", "*", "id={$questinfos['type']}"));
 
-        $form = new Form("index.php?module=config-questsystem&amp;action=questsystem_quest_add_user&amp;id={$id}", "post", "", 1);
+        $form = new Form("index.php?module=rpgstuff-questsystem&amp;action=questsystem_quest_add_user&amp;id={$id}", "post", "", 1);
         $form_container = new FormContainer("Quest einem User zuteilen");
         echo $form->generate_hidden_field('qid', $id);
         echo $form->generate_hidden_field('qtid', $questtypeinfo['id']);
@@ -1612,7 +1551,7 @@ function questsystem_admin_load()
         $page->output_footer();
       } else {
         echo
-        "<a href=\"index.php?module=config-questsystem&action=questsystem_quest_manage\"></b>Erst Quest wählen, dem ein User zugeteilt werden soll</b></a>
+        "<a href=\"index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage\"></b>Erst Quest wählen, dem ein User zugeteilt werden soll</b></a>
         ";
       }
       die();
@@ -1630,28 +1569,28 @@ function questsystem_do_submenu()
   //Übersicht
   $sub_tabs['questsystem'] = [
     "title" => $lang->questsystem_overview,
-    "link" => "index.php?module=config-questsystem",
+    "link" => "index.php?module=rpgstuff-questsystem",
     "description" => "Eine Übersicht aller Questtypen"
   ];
 
   //Questtyp anlegen
   $sub_tabs['questsystem_questtype_add'] = [
     "title" => $lang->questsystem_manage_createquesttype,
-    "link" => "index.php?module=config-questsystem&amp;action=questsystem_questtype_add",
+    "link" => "index.php?module=rpgstuff-questsystem&amp;action=questsystem_questtype_add",
     "description" => "Einen Questtyp anlegen."
   ];
 
   //Quest anlegen
   $sub_tabs['questsystem_quest_add'] = [
     "title" => $lang->questsystem_manage_addquest,
-    "link" => "index.php?module=config-questsystem&amp;action=questsystem_quest_add",
+    "link" => "index.php?module=rpgstuff-questsystem&amp;action=questsystem_quest_add",
     "description" => "Ein Quest anlegen"
   ];
 
   //Übersicht welches Mitglied/hat welche Aufgabe
   $sub_tabs['questsystem_quest_manage'] = [
     "title" => $lang->questsystem_management,
-    "link" => "index.php?module=config-questsystem&amp;action=questsystem_quest_manage",
+    "link" => "index.php?module=rpgstuff-questsystem&amp;action=questsystem_quest_manage",
     "description" => "Welches Mitglied hat gerade welches Quest - Übersicht und Verwaltung"
   ];
   return $sub_tabs;
@@ -1666,7 +1605,8 @@ function questsystem_do_submenu()
 $plugins->add_hook("member_profile_end", "questsystem_member_profile");
 function questsystem_member_profile()
 {
-  global $memprofile, $db, $mybb, $templates, $questsystem_member_bit, $questsystem_member;
+  global $memprofile, $lang, $db, $mybb, $templates, $questsystem_member_bit, $questsystem_member;
+  $lang->load('questsystem');
   $questsystem_member_bit = "";
   $questsystem_member = "";
   if ($mybb->settings['questsystem_points_generell']) {
@@ -1675,16 +1615,16 @@ function questsystem_member_profile()
     $get_all_points = $db->simple_select("questsystem_points", "*", "uid = {$uid}", array("order_by" => "date", "order_dir" => "desc"));
     while ($userpoints = $db->fetch_array($get_all_points)) {
       if ($userpoints['points'] == 1 or $userpoints['points'] == -1) {
-        $punkte = $userpoints['points'] . " Punkt";
+        $punkte = $userpoints['points'] . " " . $lang->questsystem_point;
       } else {
-        $punkte = $userpoints['points'] . " Punkte";
+        $punkte = $userpoints['points'] . " " . $lang->questsystem_points;
       }
       $reason = $userpoints['reason'];
 
       $date = date("d.m.Y", strtotime($userpoints['date']));
 
       if ($mybb->usergroup['canmodcp'] == 1) {
-        $date .= " <a href=\"member.php?action=profile&uid={$uid}&deleteentry={$userpoints['hid']}\" onclick=\"return confirm('Möchtest du den Punkteeintrag wirklich löschen?');\" style=\"font-size: 0.7em;\">[x]</a>";
+        $date .= " <a href=\"member.php?action=profile&uid={$uid}&deleteentry={$userpoints['id']}\" onclick=\"return confirm('Möchtest du den Punkteeintrag wirklich löschen?');\" style=\"font-size: 0.7em;\">[x]</a>";
       }
 
       eval("\$questsystem_member_bit = \"" . $templates->get("questsystem_member_bit") . "\";");
@@ -3074,7 +3014,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "template" => '<div class="quest_index__item"><b>Questvorschlag</b><br/>
       <p class="quest_index_descr">{$quest_in[\\\'name\\\']}: 
       {$quest_in[\\\'questdescr\\\']}<br/>
-      <a href="admin/index.php?module=config-questsystem&action=questsystem_quest_manage">[hier freischalten]</a> 
+      <a href="admin/index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage">[hier freischalten]</a> 
       <a href="private.php?action=send&uid={$quest_in[\\\'uid\\\']}">[ Nachfragen(PN) ]</a> 
       <a onclick="$(\\\'#editquest{$quest_in[\\\'id\\\']}\\\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \\\'undefined\\\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">[edit infos]</a>      </span>
 
@@ -3082,8 +3022,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
       <form action="" id="formeditscene" method="post" >
       <input type="hidden" value="{$quest_in[\\\'id\\\']}" name="id" id="id"/>
       <center>
-      <input type="text" name="questtyp" id="questtyp" placeholder="queststyp 1 oder 2" value="{$quest_in[\\\'type\\\']}" /><br>
-      1 für plottasks oder 2 für userquests<br><br>
+      <input type="hidden" name="questtyp" id="questtyp" value="{$quest_in[\\\'type\\\']}" />
       <textarea name="questdescr" id="questdescr" placeholder="Beschreibung" style="height: 80px;"> {$quest_in[\\\'questdescr\\\']}</textarea><br>
            </form>
       <button name="edit_questin" id="editquestin">Submit</button>
@@ -3102,7 +3041,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
       <b>Questzuteilung</b><br/>
       Mindestens ein User wartet auf Questzuteilung.<br/>
       <span class="quest_index_descr">
-      <a href="admin/index.php?module=config-questsystem&action=questsystem_quest_manage">[hier zuteilen]</a> 
+      <a href="admin/index.php?module=rpgstuff-questsystem&action=questsystem_quest_manage">[hier zuteilen]</a> 
       </span>
       </div>',
     "sid" => "-2",
@@ -3182,4 +3121,156 @@ function questsystem_add_settings($type = "install")
     $db->insert_query('settings', $setting);
   }
   rebuild_settings();
+}
+
+function questsystem_stylesheet()
+{
+  global $db;
+  $css = array(
+    'name' => 'questsystem.css',
+    'tid' => 1,
+    'attachedto' => '',
+    "stylesheet" =>    '
+    .questrules {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    
+    .questrules span {
+      display: inline-block;
+      width: 100%;
+      padding-left: 10px;}
+    
+    .questtypbit {
+      margin: 10px 0px;
+      margin-bottom: 30px;
+      padding: 10px;
+      padding-top: 0px;
+      border: 5px solid var(--tabel-color);
+    }
+    
+    .questshow-container {
+      gap: 12px;
+      display: grid;
+      grid-template-columns: 1fr 5fr;
+    }
+    
+    .nav__item {
+      padding: 5px;
+      background-color: var(--tabel-color);
+      margin: 2px;
+      text-align: center;
+    }
+    
+    .questshow__item.questshow-nav {
+      padding-top: 5px;
+      padding-left: 5px;
+    }
+    
+    .questsystem h1 {
+      text-align: center;
+    }
+    
+    #submitquestform {
+        display: flex; 
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: center;
+    
+    }
+    
+    .submitquestform__item {
+        width:100%;
+        text-align: center;
+    }
+    .submitquestform__item input,
+    .submitquestform__item select,
+    .submitquestform__item textarea {
+        width:50%;
+    }
+     #submit_quest {
+        margin: 10px 0px;
+        width:100px;
+    }
+    ',
+    'cachefile' => $db->escape_string(str_replace('/', '', 'questsystem.css')),
+    'lastmodified' => time()
+  );
+
+  return $css;
+}
+
+function questsystem_is_updated()
+{
+  return true;
+}
+
+function questsystem_stylesheet_update()
+{
+  $update_array_all = array();
+  $update_array = array();
+  return $update_array_all;
+}
+
+$plugins->add_hook('admin_rpgstuff_update_plugin', "questsystem_admin_update_plugin");
+function questsystem_admin_update_plugin(&$table)
+{
+  global $db, $mybb, $lang;
+
+  $lang->load('rpgstuff_plugin_updates');
+  if ($mybb->input['action'] == 'add_update' and $mybb->get_input('plugin') == "questsystem") {
+    questsystem_add_db("update");
+    questsystem_add_settings("update");
+    rebuild_settings();
+    questsystem_add_templates("templates");
+
+    //Brauchen wir momentan noch nicht, es gibt noch kein Update :) 
+
+    // $update_data_all = questsystem_stylesheet_update();
+    // foreach ($update_data_all as $update_data) {
+    //   $update_stylesheet = $update_data['stylesheet'];
+    //   $update_string = $update_data['update_string'];
+    //   if (!empty($update_string)) {
+    //     // Ob im Master Style die Überprüfung vorhanden ist
+    //     $masterstylesheet = $db->fetch_field($db->query("SELECT stylesheet FROM " . TABLE_PREFIX . "themestylesheets WHERE tid = 1 AND name = 'lexicon.css'"), "stylesheet");
+    //     $pos = strpos($masterstylesheet, $update_string);
+    //     if ($pos === false) { // nicht vorhanden 
+    //       $theme_query = $db->simple_select('themes', 'tid, name');
+    //       while ($theme = $db->fetch_array($theme_query)) {
+    //         $stylesheet_query = $db->simple_select("themestylesheets", "*", "name='" . $db->escape_string('questsystem.css') . "' AND tid = " . $theme['tid']);
+    //         $stylesheet = $db->fetch_array($stylesheet_query);
+    //         if ($stylesheet) {
+    //           require_once MYBB_ADMIN_DIR . "inc/functions_themes.php";
+    //           $sid = $stylesheet['sid'];
+
+    //           $updated_stylesheet = array(
+    //             "cachefile" => $db->escape_string($stylesheet['name']),
+    //             "stylesheet" => $db->escape_string($stylesheet['stylesheet'] . "\n\n" . $update_stylesheet),
+    //             "lastmodified" => TIME_NOW
+    //           );
+
+    //           $db->update_query("themestylesheets", $updated_stylesheet, "sid='" . $sid . "'");
+
+    //           if (!cache_stylesheet($theme['tid'], $stylesheet['name'], $updated_stylesheet['stylesheet'])) {
+    //             $db->update_query("themestylesheets", array('cachefile' => "css.php?stylesheet=" . $sid), "sid='" . $sid . "'", 1);
+    //           }
+
+    //           update_theme_stylesheet_list($theme['tid']);
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+  }
+  // Zelle mit dem Namen des Themes
+  $table->construct_cell("<b>" . htmlspecialchars_uni("Questsystem") . "</b>", array('width' => '70%'));
+  // Überprüfen, ob Update erledigt
+  $update_check = questsystem_is_updated();
+  if ($update_check) {
+    $table->construct_cell($lang->plugins_actual, array('class' => 'align_center'));
+  } else {
+    $table->construct_cell("<a href=\"index.php?module=rpgstuff-plugin_updates&action=add_update&plugin=questsystem\">" . $lang->plugins_update . "</a>", array('class' => 'align_center'));
+  }
+
+  $table->construct_row();
 }
