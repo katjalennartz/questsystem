@@ -21,6 +21,9 @@ $l['questsystem_waiting'] = "<span>wartet auf Zuteilung</span>";
 $l['questsystem_daysuntil'] = "<span><b>Bis zum:</b> {1}</span>";
 $l['questsystem_daysuntil_none'] = "<span><b>Bis zum:</b> Keine Begrenzung</span>";
 
+$l['questsystem_point'] = "Punkt";
+$l['questsystem_points'] = "Punkte";
+
 //alerts
 $l['myalerts_setting_questsystem_QuestAccepted'] = 'Questsystem: Benachrichtigung wenn ein Questvorschlag akzeptiert wurde?';
 $l['questsystem_QuestAccepted'] = '{1} dein Questvorschlag wurde akzeptiert und du hast die Punkte bekommen.';
