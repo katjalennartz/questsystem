@@ -9,8 +9,8 @@
  * 
  */
 // enable for Debugging:
-// error_reporting(E_ERROR | E_PARSE);
-// ini_set('display_errors', true);
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', true);
 
 
 
@@ -774,6 +774,11 @@ function questsystem_admin_load()
             "index.php?module=config-questsystem&amp;action=questsystem_delete_quest&amp;id={$quest['id']}"
               . "&amp;my_post_key={$mybb->post_code}"
           );
+          $popup->add_item(
+            "edit",
+            "index.php?module=config-questsystem&amp;action=questsystem_edit_quest&amp;id={$quest['id']}"
+              . "&amp;my_post_key={$mybb->post_code}"
+          );
           //Muss das Quest noch freigeschaltet werden? Dann entsprechend button anzeigen
           if ($quest['admincheck'] == 0) {
             $popup->add_item(
@@ -847,6 +852,101 @@ function questsystem_admin_load()
         $form_container->construct_row();
       }
       $form_container->end();
+      $form->end();
+      $page->output_footer();
+      die();
+    }
+
+    if ($mybb->get_input('action') == "questsystem_edit_quest") {
+
+      if ($mybb->request_method == "post") {
+        $questid = $mybb->get_input('id');
+        $groupflag = $db->fetch_field($db->simple_select("questsystem_type", "groupquest", "id = {$mybb->input['types'][0]}"), "groupquest");
+        if (empty($mybb->get_input('qname'))) {
+          $errors[] = $lang->questsystem_manage_cqt_questname_error;
+        }
+        if (empty($mybb->input['types'])) {
+          $errors[] = $lang->questsystem_manage_cqt_questtypes_error;
+        }
+        if (empty($mybb->input['qdescr'])) {
+          $errors[] = $lang->questsystem_manage_cqt_qdescr_error;
+        }
+        if ($mybb->get_input('group') == 1 && $groupflag == 0) {
+          $errors[] = "Dieser Typ erlaubt keine Gruppenquests";
+        }
+        if (empty($errors)) {
+          $update = [
+            "name" => $db->escape_string($mybb->get_input('qname')),
+            "type" => $mybb->input['types'][0],
+            "questdescr" => $db->escape_string($mybb->get_input('qdescr')),
+            "groupquest" => $mybb->get_input('group'),
+            "admincheck" => 1,
+          ];
+          $db->update_query("questsystem_quest", $update, "id = '{$questid}'");
+          $mybb->input['module'] = "questsystem";
+          $mybb->input['action'] = "Erfolgreich gespeichert";
+          flash_message("Erfolgreich gespeichert", 'success');
+          admin_redirect("index.php?module=config-questsystem&action=questsystem_quest_manage");
+          die();
+        }
+      }
+
+      //Formular um ein Questhinzuzufügen
+      $page->add_breadcrumb_item($lang->questsystem_manage_createquest);
+      $page->output_header($lang->questsystem_name);
+      $sub_tabs = questsystem_do_submenu();
+      $page->output_nav_tabs($sub_tabs, 'questsystem_quest_add');
+
+      if (isset($errors)) {
+        $page->output_inline_error($errors);
+      }
+      $id = $mybb->get_input('id', MyBB::INPUT_INT);
+      $questdata = $db->simple_select("questsystem_quest", "*", "id={$id}");
+      $edit = $db->fetch_array($questdata);
+
+      $form = new Form("index.php?module=config-questsystem&amp;action=questsystem_edit_quest", "post", "", 1);
+      echo $form->generate_hidden_field('id', $id);
+      $form_container = new FormContainer("Quest editieren");
+      $form_container->output_row(
+        $lang->questsystem_manage_cqt_questname, //Name 
+        $lang->questsystem_manage_cqt_questname_descr,
+        $form->generate_text_box('qname', htmlspecialchars_uni($edit['name']))
+      );
+      $questtype = $db->simple_select("questsystem_type", "id,name", "", array("order" => "name"));
+      while ($result = $db->fetch_array($questtype)) {
+        $id = $result['id'];
+        $alltypes[$id] = $result['name'];
+      }
+
+      //Reihe für Die User
+      $form_container->output_row(
+        $lang->questsystem_manage_cqt_questtypes, //name
+        $lang->questsystem_manage_cqt_questtypes_descr,
+        $form->generate_select_box(
+          'types[]',
+          $alltypes,
+          $edit['type'],
+          array('id' => 'id', 'multiple' => false, 'size' => 5)
+        ),
+        'questtype'
+      );
+      //name des Quests
+      $form_container->output_row(
+        $lang->questsystem_manage_cqt_questdescr,
+        $lang->questsystem_manage_cqt_questdescr_descr,
+        $form->generate_text_area('qdescr', $edit['questdescr'])
+      );
+
+      //Darf pro quest bestimmt werden welche gruppen (d.h. Questtyp kann einzel und gruppenquests haben)
+      $form_container->output_row(
+        $lang->questsystem_manage_cqt_groupquest, //Name 
+        $lang->questsystem_manage_cqt_groupquest_descr,
+        $form->generate_yes_no_radio('group', $edit['groupquest'])
+      );
+
+      $form_container->end();
+      $buttons[] = $form->generate_submit_button($lang->questsystem_manage_cqt_form_create);
+      $form->output_submit_wrapper($buttons);
       $form->end();
       $page->output_footer();
       die();
@@ -936,7 +1036,6 @@ function questsystem_admin_load()
           $db->update_query("questsystem_type", $update, "id = {$questid}");
           $mybb->input['module'] = "questsystem";
           $mybb->input['action'] = "Erfolgreich gespeichert";
-          // log_admin_action("users: " . htmlspecialchars_uni(implode(",", $mybb->input['users'])) . " Questsystem:" . htmlspecialchars_uni(implode(",", $mybb->input['awards'])));
           flash_message("Erfolgreich gespeichert", 'success');
           admin_redirect("index.php?module=config-questsystem");
           die(); //evt. wieder rauswerfen
