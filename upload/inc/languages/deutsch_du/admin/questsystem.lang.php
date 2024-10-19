@@ -68,7 +68,7 @@ $l['questsystem_manage_cqt_formunique_descr'] = "Darf das Quest nur von einem Us
 $l['questsystem_manage_cqt_form_useradd'] = "Questeinreichung? <em>*</em>";
 $l['questsystem_manage_cqt_form_useradd_descr'] = "Dürfen User Quests einreichen?";
 
-$l['questsystem_manage_cqt_grouptask'] = "Gruppenquest?";
+$l['questsystem_manage_cqt_grouptask'] = "Gruppenquest";
 $l['questsystem_manage_cqt_grouptask_descr'] = "Dürfen Quests als Gruppenquest eingereicht werden?";
 
 
