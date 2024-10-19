@@ -55,6 +55,10 @@ $l['questsystem_manage_cqt_subpoints_descr'] = "Wenn ja, wieviele? (Sonst einfac
 $l['questsystem_manage_cqt_formadmin_assignment'] = "Questzuteilung <em>*</em>";
 $l['questsystem_manage_cqt_formadmin_assignment_descr'] = "Muss ein Admin ein Quest zuteilen? Sonst wird es zufällig ausgewählt.";
 
+$l['questsystem_manage_cqt_formadmin_delete'] = "Ablehnen <em>*</em>";
+$l['questsystem_manage_cqt_formadmin_delete_descr'] = "Dürfen User das Quest ablehnen?";
+
+
 $l['questsystem_manage_cqt_formrepeat'] = "Mehrfaches abschließen? <em>*</em>";
 $l['questsystem_manage_cqt_formrepeat_descr'] = "Darf ein Quest des Typs vom gleichen User mehrfach gezogen werden (nach Beendigung)? ";
 
@@ -129,3 +133,4 @@ $l['questsystem_manage_cqt_admincheck'] = "Quest Freischalten";
 $l['questsystem_manage_cqt_admincheck_back'] = "Quest Zurücknehmen";
 
 $l['questsystem_manage_cqt_admincheck_success'] = "Quest erfolgreich freigeschaltet/zurückgenommen";
+
