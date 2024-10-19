@@ -267,22 +267,15 @@ Hier hast du eine Übersicht über die Quests,  die abgelaufen sind, ohne dass d
 				<div class="questshow__item questshow-main">
 				
 									<div class="questshow-howto">
-										<h2>Aufgaben-System</h2>
-Das hier ist unsere kleine aber feine Quests-Seite. Hier könnt ihr entweder Aufgaben für eure Charaktere ziehen, oder euch plotrelevante Aufgaben zuteilen lassen.
-<br/>
-Die <b>Userquests</b> können von jedem Charakter gezogen werden. Keine Angst, es sind keine Aufgaben die eure Charaktere anders darstellen, als sie eigentlich sind, denn wir wollen, dass jeder Charakter sich selbst treu bleiben kann. 
-Hier wird es eher "leichtere" Aufgaben geben, mit denen man vielleicht im Inplay einfach das ein oder andere Gesprächsthema oder Gedankengang anfangen kann, oder den/die Playpartner:in besser kennenlenern kann.<br/><br/>
-Unsere <b>Plotquests</b> sind da schon ein bisschen anders. 
-Diese Aufgaben sind zum Teil Story/Plotrelevant und fordern euch ein bisschen heraus. Zum Teil können sie nur in Gruppen erledigt werden und erfordern zum erfolgreichen abschließen zudem eine gesamte Szene und nicht nur einen Post. 
-Nicht jede Aufgabe ist für jede Gruppe (also Orden/Todesser etc.) verfügbar und nicht jedes Quest für jeden Charakter geeignet. 
-Deswegen teilt das Team euch bei Interesse ein Quest zu. Ihr meldet euch hier also für eine Zuteilung und wir kümmern uns dann darum und geben euch eine passende Aufgabe (sorfern gerade eine Verfügbar ist, die zu eurem Charakter passt).<br />
+										<h2>Questsystem</h2>
+                   Willkommen im Questsystem, hier könnt ihr euch Aufgaben ziehen oder zuteilen lassen. Viel Spaß! 
 					</div>
       			{$questsystem_misc_questtypbit}
 				</div>
 			</div>
 		</td>
       </table>
-		<br />
+		<br /> 
     {$footer}
 <link rel="stylesheet" href="{$mybb->asset_url}/jscripts/select2/select2.css?ver=1807">
 <script type="text/javascript" src="{$mybb->asset_url}/jscripts/select2/select2.min.js?ver=1806"></script>
@@ -378,7 +371,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
   $template[] = array(
     "title" => 'questsystem_misc_quests_done',
     "template" => '{$username_tit}
-    <div class="questtypbit">
+    <div class="questtypbit tborder">
       <div class="questtypbit__item">
         <h3>{$type[\\\'name\\\']}</h3>
         {$waiting}
@@ -403,8 +396,9 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     <div class="questtypbit">
     
       <div class="questtypbit__item">
-        <h3>{$type[\\\'name\\\']}</h3>
-        {$waiting}
+        <h3>{$type[\\\'name\\\']}: {$questdata[\\\'name\\\']}</h3>
+        {$delete_link}
+        {$waiting} 
         <div class="questdescr">{$questdata[\\\'questdescr\\\']}</div>
         <div class="questrules">
           {$daysend}
@@ -904,7 +898,7 @@ function questsystem_admin_load()
       $form_container->output_row_header($lang->questsystem_manage_overview);
       $form_container->output_row_header("<div style=\"text-align: center;\">{$lang->questsystem_manage_options}</div>");
 
-      //Alle Einträge aus Reservierungstabelle bekommen um sie anzuzeigen, nach Namen sortiert
+      //Alle Einträge aus Questsystem bekommen um sie anzuzeigen, nach Namen sortiert
       $get_questtype = $db->simple_select("questsystem_type", "*", "", ["order_by" => 'name']);
       //alle durchgehen und Spalte erstellen
       while ($questtype = $db->fetch_array($get_questtype)) {
@@ -945,54 +939,57 @@ function questsystem_admin_load()
     }
 
     // Questtyp erstellen
-    if ($mybb->input['action'] == "questsystem_questtype_add") {
+    if ($mybb->get_input('action') == "questsystem_questtype_add") {
       //Das ganze einmal abspeichern und in der Datenbank eintragen
       if ($mybb->request_method == "post") {
         //als erstes fangen wir Fehler und leere Eingaben ab
-        if (empty($mybb->input['name'])) {
+        if (empty($mybb->get_input('name'))) {
           $errors[] = $lang->questsystem_cqt_error_name;
         }
-        if (empty($mybb->input['name_db'])) {
+        if (empty($mybb->get_input('name_db'))) {
           $errors[] = $lang->questsystem_cqt_error_name_db;
         }
-        if (empty($mybb->input['descr'])) {
+        if (empty($mybb->get_input('descr'))) {
           $errors[] = $lang->questsystem_cqt_error_typdescr;
         }
-        if (empty($mybb->input['groupselect'])) {
+        if (empty($mybb->get_input('groupselect'))) {
           $errors[] = $lang->questsystem_cqt_error_groupselect;
         }
-        if (empty($mybb->input['enddays'])) {
+        if (empty($mybb->get_input('enddays'))) {
           $end = "0";
         } else {
-          $end =  $mybb->input['enddays'];
+          $end =  $mybb->get_input('enddays');
         }
-        if (empty($mybb->input['points_add'])) {
+        if (empty($mybb->get_input('points_add'))) {
           $points_add = "0";
         } else {
-          $points_add =  $mybb->input['points_add'];
+          $points_add =  $mybb->get_input('points_add');
         }
-        if (empty($mybb->input['points_minus'])) {
+        if (empty($mybb->get_input('points_minus'))) {
           $points_minus = "0";
         } else {
-          $points_minus =  $mybb->input['points_minus'];
+          $points_minus =  $mybb->get_input('points_minus');
         }
-        if (empty($mybb->input['group_profilefield'])) {
+        if (empty($mybb->get_input('group_profilefield'))) {
           $mybb->input['group_profilefield'] = "0";
         } else {
-          $mybb->input['group_profilefield'] = $mybb->input['group_profilefield'];
+          $mybb->input['group_profilefield'] = $mybb->get_input('group_profilefield');
         }
-        if (empty($mybb->input['group_profilefield_type'])) {
+        if (empty($mybb->get_input('group_profilefield_type'))) {
           $mybb->input['group_profilefield_type'] = "0";
         } else {
-          $mybb->input['group_profilefield_type'] = $mybb->input['group_profilefield_type'];
+          $mybb->input['group_profilefield_type'] = $mybb->get_input('group_profilefield_type');
         }
-        if (empty($mybb->input['finish'])) {
+        if (empty($mybb->get_input('delete'))) {
+          $mybb->input['delete'] = "0";
+        }
+        if (empty($mybb->get_input('finish'))) {
           $errors[] = $lang->questsystem_manage_cqt_form_finish_err;
         }
         if (empty($errors)) {
           if ($mybb->get_input('groupselect') == "custom") {
             // var_dump($mybb->input['groupselect_sel']);
-            $grpstring = implode(",", $mybb->input['groupselect_sel']);
+            $grpstring = implode(",", $mybb->get_input('groupselect_sel'));
           }
           if ($mybb->get_input('groupselect') == "all") {
             $grpstring = "-1";
@@ -1003,22 +1000,23 @@ function questsystem_admin_load()
 
           //einfügen
           $insert = [
-            "name" => $db->escape_string($mybb->input['name']),
-            "type" => $db->escape_string($mybb->input['name_db']),
-            "typedescr" => $db->escape_string($mybb->input['descr']),
+            "name" => $db->escape_string($mybb->get_input('name')),
+            "type" => $db->escape_string($mybb->get_input('name_db')),
+            "typedescr" => $db->escape_string($mybb->get_input('descr')),
             "groups" => $grpstring,
             // "groups_questdepend" => implode(",", $mybb->input['users']),
             "enddays" => $end,
             "points_minus" => $points_minus,
             "points_add" => $points_add,
-            "admin_assignment" => $mybb->input['admin_assignment'],
-            "repeat" => $mybb->input['repeat'],
-            "unique" => $mybb->input['unique'],
-            "group_str" => $db->escape_string($mybb->input['group_profilefield']),
-            "group_fid" => $db->escape_string($mybb->input['group_profilefield_type']),
-            "groupquest" => $mybb->input['grouptask'],
-            "finish_typ" => $db->escape_string($mybb->input['finish']),
-            "user_add" => $mybb->input['user_add'],
+            "admin_assignment" => $mybb->get_input('admin_assignment'),
+            "repeat" => $mybb->get_input('repeat'),
+            "delete" => $mybb->get_input('delete'),
+            "unique" => $mybb->get_input('unique'),
+            "group_str" => $db->escape_string($mybb->get_input('group_profilefield')),
+            "group_fid" => $db->escape_string($mybb->get_input('group_profilefield_type')),
+            "groupquest" => $mybb->get_input('grouptask'),
+            "finish_typ" => $db->escape_string($mybb->get_input('finish')),
+            "user_add" => $mybb->get_input('user_add'),
           ];
           $db->insert_query("questsystem_type", $insert);
           $mybb->input['module'] = "questsystem";
@@ -1127,7 +1125,12 @@ function questsystem_admin_load()
         $lang->questsystem_manage_cqt_formadmin_assignment_descr,
         $form->generate_yes_no_radio('admin_assignment', 0)
       );
-
+      //Wird zufällig ein Quest des Typs ausgewählt? 
+      $form_container->output_row(
+        $lang->questsystem_manage_cqt_formadmin_delete, //Name 
+        $lang->questsystem_manage_cqt_formadmin_delete_descr,
+        $form->generate_yes_no_radio('delete', 0)
+      );
       //Darf ein Quest des Typs vom gleichen User mehrfach gezogen werden (nach Beendigung)? 
       $form_container->output_row(
         $lang->questsystem_manage_cqt_formrepeat, //Name 
@@ -1175,10 +1178,10 @@ function questsystem_admin_load()
     }
 
     // Ein Quest hinzufügen
-    if ($mybb->input['action'] == "questsystem_quest_add") {
+    if ($mybb->get_input('action') == "questsystem_quest_add") {
       if ($mybb->request_method == "post") {
         $groupflag = $db->fetch_field($db->simple_select("questsystem_type", "groupquest", "id = {$mybb->input['types'][0]}"), "groupquest");
-        if (empty($mybb->input['qname'])) {
+        if (empty($mybb->get_input('qname'))) {
           $errors[] = $lang->questsystem_manage_cqt_questname_error;
         }
         if (empty($mybb->input['types'])) {
@@ -1187,15 +1190,15 @@ function questsystem_admin_load()
         if (empty($mybb->input['qdescr'])) {
           $errors[] = $lang->questsystem_manage_cqt_qdescr_error;
         }
-        if ($mybb->input['group'] == 1 && $groupflag == 0) {
+        if ($mybb->get_input('group') == 1 && $groupflag == 0) {
           $errors[] = "Dieser Typ erlaubt keine Gruppenquests";
         }
         if (empty($errors)) {
           $insert = [
-            "name" => $db->escape_string($mybb->input['qname']),
+            "name" => $db->escape_string($mybb->get_input('qname')),
             "type" => $mybb->input['types'][0],
-            "questdescr" => $db->escape_string($mybb->input['qdescr']),
-            "groupquest" => $mybb->input['group'],
+            "questdescr" => $db->escape_string($mybb->get_input('qdescr')),
+            "groupquest" => $mybb->get_input('group'),
             "admincheck" => 1,
           ];
           $db->insert_query("questsystem_quest", $insert);
@@ -1445,10 +1448,13 @@ function questsystem_admin_load()
         } else {
           $points_minus =  $mybb->input['points_minus'];
         }
+        if (empty($mybb->input['delete'])) {
+          $delete = "0";
+        }
         if (empty($mybb->input['group_profilefield'])) {
           $mybb->input['group_profilefield'] = "0";
         } else {
-          $mybb->input['group_profilefield'] = $mybb->input['group_profilefield'];
+          $mybb->input['group_profilefield'] = $mybb->get_input('group_profilefield');
         }
         if (empty($mybb->input['group_profilefield_type'])) {
           $mybb->input['group_profilefield_type'] = "0";
@@ -1481,14 +1487,15 @@ function questsystem_admin_load()
             "enddays" => $end,
             "points_minus" => $points_minus,
             "points_add" => $points_add,
-            "admin_assignment" => $mybb->input['admin_assignment'],
-            "repeat" => $mybb->input['repeat'],
-            "unique" => $mybb->input['unique'],
+            "admin_assignment" => $mybb->get_input('admin_assignment'),
+            "repeat" => $mybb->get_input('repeat'),
+            "unique" => $mybb->get_input('unique'),
+            "delete" => $mybb->get_input('delete'),
             "group_str" => $db->escape_string($mybb->input['group_profilefield']),
             "group_fid" => $db->escape_string($mybb->input['group_profilefield_type']),
-            "groupquest" => $mybb->input['grouptask'],
-            "finish_typ" => $db->escape_string($mybb->input['finish']),
-            "user_add" => $mybb->input['user_add'],
+            "groupquest" => $mybb->get_input('grouptask'),
+            "finish_typ" => $db->escape_string($mybb->get_input('finish')),
+            "user_add" => $mybb->get_input('user_add'),
           ];
           $db->update_query("questsystem_type", $update, "id = {$questid}");
           $mybb->input['module'] = "questsystem";
@@ -1610,7 +1617,12 @@ function questsystem_admin_load()
         $lang->questsystem_manage_cqt_formadmin_assignment_descr,
         $form->generate_yes_no_radio('admin_assignment', $edit['admin_assignment'])
       );
-
+      //Wird zufällig ein Quest des Typs ausgewählt? 
+      $form_container->output_row(
+        $lang->questsystem_manage_cqt_formadmin_delete, //Name 
+        $lang->questsystem_manage_cqt_formadmin_delete_descr,
+        $form->generate_yes_no_radio('delete', $edit['delete'])
+      );
       //Darf ein Quest des Typs vom gleichen User mehrfach gezogen werden (nach Beendigung)? 
       $form_container->output_row(
         $lang->questsystem_manage_cqt_formrepeat, //Name 
@@ -1896,7 +1908,6 @@ function questsystem_admin_load()
       $id = $mybb->get_input('id', MyBB::INPUT_INT);
       $get_quest = $db->simple_select("questsystem_quest", "*", "id={$id}");
       $del_quest = $db->fetch_array($get_quest);
-      var_dump($del_quest);
       if (empty($id)) {
         flash_message($lang->questsystem_manage_cqt_delete_error, 'error');
         admin_redirect("index.php?module=config-questsystem");
@@ -1917,7 +1928,7 @@ function questsystem_admin_load()
 
           //dazugehörige Quests der User löschen
           $db->delete_query("questsystem_quest_user", "qtid='{$id}'");
-          
+
           $mybb->input['module'] = "questsystem";
 
           $mybb->input['action'] = $lang->questsystem_manage_cqt_delete_tit;
@@ -2171,20 +2182,20 @@ function questsystem_show()
       error_no_permission();
     }
 
-    //rpgawards_scores_main{$isgroup}
     $questsystem_misc_main = "";
     $takequest = "";
-    //welches tab soll Default zu sehen sein?
-    $tabtoshow = $mybb->settings['questsystem_defaulttab'];
-    //tabs ja oder nein?
-    $quest_tab = $mybb->settings['questsystem_tab'];
+
+    // //welches tab soll Default zu sehen sein?
+    // $tabtoshow = $mybb->settings['questsystem_defaulttab'];
+    // //tabs ja oder nein?
+    // $quest_tab = $mybb->settings['questsystem_tab'];
+
     //Typen bekommen
     $get_types = $db->simple_select("questsystem_type", "*", "active = 1");
     while ($type = $db->fetch_array($get_types)) {
       //Darf der User diesen Questtypen sehen/nutzen
 
       $isAllowed = questsystem_isAllowed($type, $thisuser);
-
       if ($isAllowed) {
         // welchen typ haben wir
         $quest_type = $type['name'];
@@ -2230,8 +2241,8 @@ function questsystem_show()
         }
 
         if ($mybb->input['take_waiting']) {
-          // dürfen mehrere gleichzeitig das Quest erledigen
-          $qtid = $mybb->input['id'];
+
+          $qtid = $mybb->get_input('id');
           $typeinfos =  $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_type WHERE id = {$qtid}"));
 
           // Ziehen eines Quests, welches zugeteilt werden muss -> User in die Warteschlange packen
@@ -2242,7 +2253,7 @@ function questsystem_show()
           ];
           $db->insert_query("questsystem_quest_user", $insert);
 
-          redirect('misc.php?action=questsystem');
+          redirect('misc.php?action=questsystem_progress');
         }
 
         if ($mybb->input['take_random']) {
@@ -2250,7 +2261,6 @@ function questsystem_show()
 
           $qtid = $mybb->input['questid'];
 
-          // dürfen mehrere gleichzeitig das Quest erledigen
           $typeinfos =  $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_type WHERE id = {$qtid}"));
 
           //Darf das Quest mehrfach erledigt werden? 
@@ -2301,7 +2311,7 @@ function questsystem_show()
             "in_progress" => 1,
           ];
           $db->update_query("questsystem_quest", $update_quest, "id='{$randquest['id']}'");
-          redirect('misc.php?action=questsystem');
+          redirect('misc.php?action=questsystem_progress');
         }
         eval("\$questsystem_misc_questtypbit .= \"" . $templates->get("questsystem_misc_questtypbit") . "\";");
       }
@@ -2311,7 +2321,20 @@ function questsystem_show()
     die();
   }
 
-  if ($mybb->input['action'] == "questsystem_progress") {
+  if ($mybb->get_input('action') == "questsystem_progress") {
+    if ($mybb->get_input('delete') != "") {
+      //questid bekommen
+      $id = $mybb->get_input('delete');
+      $questid = $mybb->get_input('questid');
+      $db->delete_query("questsystem_quest_user", "id = {$id}");
+      //Quest progress zurücksetzen
+      $update_quest = [
+        "in_progress" => 0,
+      ];
+      $db->update_query("questsystem_quest", $update_quest, "id='{$questid}'");
+  
+    }
+
     $questsystem_misc_progress = "";
     $lang->load('questsystem');
     add_breadcrumb($lang->questsystem_name, "misc.php?action=misc.php?action=questsystem");
@@ -2331,7 +2354,8 @@ function questsystem_show()
         $type =  $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_type WHERE id = {$quest['qtid']}"));
         $questdata = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE id = {$quest['qid']}"));
         $quest_type = $type['name'];
-        $type['name'] = $type['name'] . " - ID: " . $questdata['id'];
+
+        //Noch kein Quest zugeteilt, wartet auf admin zuteilung
         if ($quest['qid'] == 0) {
           $daysend  = "";
           $waiting = $lang->questsystem_waiting;
@@ -2350,6 +2374,11 @@ function questsystem_show()
             $daysend = $lang->sprintf($lang->questsystem_daysuntil, $enddate);
           } else {
             $daysend = $lang->questsystem_daysuntil_none;
+          }
+          if ($type['delete'] == "1") {
+            $delete_link = "<a href=\"misc.php?action=questsystem_progress&delete={$quest['id']}&questid={$quest['qid']}\" onclick=\"return confirm('Willst du das Quest wirklich zurückgeben?')\">Quest zurückgeben</a>";
+          } else {
+            $delete_link = "";
           }
           if ($type['finish_typ'] == "post") {
             $success = $lang->questsystem_end_post;
@@ -2403,6 +2432,7 @@ function questsystem_show()
     output_page($questsystem_misc_progress);
     die();
   }
+
   if ($mybb->input['action'] == "questsystem_done") {
     $quest = false;
     $questsystem_misc_done = "";
@@ -2477,7 +2507,7 @@ function questsystem_show()
             $success = "<span><a href=\"showthread.php?tid={$quest['tid']}\">Zur Szene</a></span>";
           }
           if ($type['points_add'] != 0) {
-            $pointsadd = "<span><b>Punkte:</b> {$type['points_add']} Punkte</span>";
+            $pointsadd = "<span><b>Punkte:</b> {$type['points_add']} Punkte für ein Quest.</span>";
             $pointsminus = "";
           } else {
             $pointsadd = "";
@@ -2602,9 +2632,9 @@ function questsystem_postbit(&$post)
       $select_typ .= "<option value=\"{$questuser['id']}\">{$getquestename} - ID: {$questuser['qid']}</option>";
     }
     $select_typ .= "</select>";
-    $post['questbutton'] = "<span class=\"scenestate\"><a onclick=\"$('#sendquest{$pid}').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== 'undefined' ? modal_zindex : 9999) }); return false;\" class=\"questbutton gd-btn\"><span>Quest einreichen</span></a>
-    </span>";
-    $post['modalquest'] = "<div class=\"modal questsystem_submitquest\" id=\"sendquest{$post['pid']}\" style=\"display: none; padding: 10px; margin: auto; text-align: center;\">
+
+    $post['questbutton'] = "<button onclick=\"$('#quest{$pid}').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== 'undefined' ? modal_zindex : 9999) }); return false;\" class=\"questbutton\">Quest einreichen</button>";
+    $post['modalquest'] = "<div class=\"modal questsystem_submitquest\" id=\"quest{$post['pid']}\" style=\"display: none; padding: 10px; margin: auto; text-align: center;\">
       <form action=\"misc.php?action=questsystem_submitquest\" id=\"questsystem_submitquest\" method=\"post\">
       <input type=\"hidden\" value=\"{$pid}\" name=\"pid\"/>
       <input type=\"hidden\" value=\"{$tid}\" name=\"tid\"/>
@@ -2615,7 +2645,7 @@ function questsystem_postbit(&$post)
     </div>
     ";
 
-    $post['questkram'] =  $post['questbutton'] .  $post['modalquest'];
+    $post['questbutton'] =  $post['questbutton'] .  $post['modalquest'];
   }
 }
 
