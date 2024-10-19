@@ -808,7 +808,7 @@ function questsystem_admin_load()
                   <b>Name:</b> ' . htmlspecialchars_uni($quest['name']) .
             $activated .
             '<span style="padding-left:10px"><i>' . $group . '</i></span>' .
-            '<div style="width:300px; margin: 5px; margin-left:10px; max-height:50px; overflow: auto">' . htmlspecialchars_uni($quest['questdescr']) .
+            '<div style="margin: 5px; margin-left:10px; max-height:50px; overflow: auto">' . htmlspecialchars_uni($quest['questdescr']) .
             '</div>' .
             '<b>User:</b> ' .
             $usersstr . '<br/>                  
@@ -2141,7 +2141,7 @@ function questsystem_show()
         "tid" => $tid
       ];
       // echo $uid ."and". $questdata['qid']; 
-      $db->update_query("questsystem_quest_user", $update, "qid = {$questdata['qid']} and  uid = {$uid} ");
+      $db->update_query("questsystem_quest_user", $update, "qid = {$questdata['qid']} and  uid = '{$thisuser}' ");
     }
     redirect("showthread.php?tid={$tid}&pid={$pid}#pid{$pid}");
     die();
@@ -2163,7 +2163,7 @@ function questsystem_postbit(&$post)
 
     while ($questuser = $db->fetch_array($userhasquest)) {
       $getquestename = $db->fetch_field($db->simple_select("questsystem_quest", "name", "id = {$questuser['qid']}"), "name");
-      $select_typ .= "<option value=\"{$questuser['id']}\">{$getquestename} - ID: {$questuser['qid']}</option>";
+      $select_typ .= "<option value=\"{$questuser['id']}\">{$getquestename}</option>";
     }
     $select_typ .= "</select>";
 
