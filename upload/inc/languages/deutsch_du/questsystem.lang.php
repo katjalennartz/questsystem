@@ -30,3 +30,6 @@ $l['questsystem_giveUser'] = 'Dir wurde ein Quest zugeteilt. Schaue in der Quest
 
 $l['myalerts_setting_questsystem_QuestDeny'] = 'Questsystem: Benachrichtigung wenn ein eingereichtes Quest nicht akzeptiert wurde?';
 $l['questsystem_QuestDeny'] = 'Deine Questeinreichung/Aufgabe wurde nicht akzeptiert und du musst das Quest erneut bearbeiten. Bei Fragen schreib einem Teammitglied.';
+
+
+
