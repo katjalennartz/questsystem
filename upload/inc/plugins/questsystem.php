@@ -3238,7 +3238,8 @@ function questsystem_add_templates($type = "install")
   $templates[] = array(
     "title" => 'questsystem_misc_overviewquests',
     "template" => '
-    {$questsystem_misc_overviewquestsbit}
+      <h3>Übersicht Quests</h3>
+      {$questsystem_misc_overviewquestsbit}
     ',
     "sid" => "-2",
     "version" => "",
@@ -3248,7 +3249,10 @@ function questsystem_add_templates($type = "install")
   $templates[] = array(
     "title" => 'questsystem_misc_overviewquestsbit',
     "template" => '
-   questsystem_misc_points_questbit
+      <div class="questsystem-overview__bit tborder">
+        <div class="questsystem-overview__user">{$username}</div>
+        <div class="questsystem-overview__quests">{$quests}</div>
+      </div>
     ',
     "sid" => "-2",
     "version" => "",
@@ -3258,7 +3262,8 @@ function questsystem_add_templates($type = "install")
   $templates[] = array(
     "title" => 'questsystem_misc_overviewpoints',
     "template" => '
-    {$questsystem_misc_overviewpoints_bit}
+      <h3>Übersicht Punkte</h3>
+      {$questsystem_misc_overviewpoints_bit}
     ',
     "sid" => "-2",
     "version" => "",
@@ -3268,7 +3273,11 @@ function questsystem_add_templates($type = "install")
   $templates[] = array(
     "title" => 'questsystem_misc_overviewpoints_bit',
     "template" => '
-    questsystem_misc_overviewpoints_bit
+      <div class="questsystem-overview__bit tborder">
+        <div class="questsystem-overview__user">{$username}<br>
+        Gesamtpunkte: {$quests_points_sum}</div>
+        <div class="questsystem-overview__quests">{$points_reasons}</div>
+      </div>
     ',
     "sid" => "-2",
     "version" => "",
@@ -3477,6 +3486,17 @@ function questsystem_stylesheet()
      #submit_quest {
         margin: 10px 0px;
         width:100px;
+    }
+
+    .questsystem-overview__bit {
+    display: flex;
+    gap: 20px;
+    padding: 10px;
+    width: auto;
+    }
+
+    .questsystem-overview__user {
+        width: 15%;
     }
     ',
     'cachefile' => $db->escape_string(str_replace('/', '', 'questsystem.css')),
