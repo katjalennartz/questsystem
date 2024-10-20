@@ -1115,7 +1115,7 @@ function questsystem_admin_load()
       $form_container->output_row(
         $lang->questsystem_manage_cqt_grouptask, //Name 
         $lang->questsystem_manage_cqt_grouptask_descr,
-        $form->generate_yes_no_radio('grouptask', $edit['grouptask'], 1)
+        $form->generate_yes_no_radio('grouptask', $edit['groupquest'])
       );
 
       //Darf pro quest bestimmt werden welche gruppen (d.h. Questtyp kann einzel und gruppenquests haben)
@@ -1638,10 +1638,36 @@ function questsystem_member_profile()
  * Zeige alle Quests
  * Quests nehmen
  */
+
 $plugins->add_hook("misc_start", "questsystem_show");
 function questsystem_show()
 {
-  global $db, $mybb, $templates, $header, $footer, $theme, $headerinclude, $lang, $takequest;
+  global $db, $mybb, $templates, $header, $footer, $theme, $headerinclude, $lang, $takequest, $questsystem_nav, $questsystem_nav_points;
+
+  //Ein Quest wird im Post als fertig markiert:
+  if ($mybb->input['action'] == "questsystem_submitquest") {
+    // $qid = $fetch_field($db->simple_select("questsystem_quest", "id", ),"id");
+    $questdata = $db->fetch_array($db->simple_select("questsystem_quest_user", "*", "id = {$mybb->input['questid']}"));
+    $pid = $mybb->input['pid'];
+    $tid = $mybb->input['tid'];
+    $thisuser = $mybb->user['uid'];
+    if ($questdata['groups'] != 0) {
+      $user_arr = explode(",", $questdata['groups']);
+    } else {
+      $user_arr[0] = $thisuser;
+    }
+    foreach ($user_arr as $uid) {
+      $update = [
+        "done" => 2,
+        "pid" => $pid,
+        "tid" => $tid
+      ];
+      // echo $uid ."and". $questdata['qid']; 
+      $db->update_query("questsystem_quest_user", $update, "qid = {$questdata['qid']} and  uid = '{$thisuser}' ");
+    }
+    redirect("showthread.php?tid={$tid}&pid={$pid}#pid{$pid}");
+    die();
+  }
 
   if (!$mybb->get_input('action') == "questsystem") return;
 
@@ -1649,8 +1675,7 @@ function questsystem_show()
     $formgroup = "";
     $lang->load('questsystem');
     add_breadcrumb($lang->questsystem_name, "misc.php?action=misc.php?action=questsystem");
-    eval("\$questsystem_nav = \"" . $templates->get("questsystem_nav") . "\";");
-
+    questsystem_navigation();
 
     $thisuser = $mybb->user['uid'];
     if ($mybb->user['uid'] == '0') {
@@ -1660,16 +1685,10 @@ function questsystem_show()
     $questsystem_misc_main = "";
     $takequest = "";
 
-    // //welches tab soll Default zu sehen sein?
-    // $tabtoshow = $mybb->settings['questsystem_defaulttab'];
-    // //tabs ja oder nein?
-    // $quest_tab = $mybb->settings['questsystem_tab'];
-
     //Typen bekommen
     $get_types = $db->simple_select("questsystem_type", "*", "active = 1");
     while ($type = $db->fetch_array($get_types)) {
       //Darf der User diesen Questtypen sehen/nutzen
-
       $isAllowed = questsystem_isAllowed($type, $thisuser);
       if ($isAllowed) {
         // welchen typ haben wir
@@ -1734,7 +1753,8 @@ function questsystem_show()
         if ($mybb->input['take_random']) {
           // Ziehen eines Quests, welches zufällig zugeordnet wird
 
-          $qtid = $mybb->input['questid'];
+          $qtid = $mybb->get_input('questid');
+
 
           $typeinfos =  $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_type WHERE id = {$qtid}"));
 
@@ -1747,26 +1767,27 @@ function questsystem_show()
 
           //Darf ein User ein Quest mehrfach erledigen?
           if ($typeinfos['repeat'] == 1) {
-            $repeat = " AND concat(',',uids,',') not LIKE '%,{$mybb->user['uid']}%,' ";
+            $repeat = " AND concat(',',uids,',') not LIKE '%,{$mybb->user['uid']},%' ";
           } else {
             $repeat = "";
           }
           //zufälliges Quest holen
-          if ($mybb->input['partners'] = "" || empty($mybb->input['partners'])) {
+          if ($mybb->input['partners'] == "" || empty($mybb->input['partners'])) {
             //KEIN GRUPPENQUEST
             $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = {$qtid} " . $in_progress . $repeat . " AND groupquest = 0 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
           } else {
             //GRUPPENQUEST
-            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = {$qtid} " . $in_progress . $repeat . " AND groupquest = 1 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
+            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND groupquest = 1 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
 
             //Beim Partner auch speichern 
-            $userdata = array_filter(explode("", $mybb->input['partners']));
+            $userdata = array_filter(explode(",", $mybb->input['partners']));
             $partner = get_user_by_username($userdata[0]);
+
             $groupstring = $mybb->user['uid'] . "," . $partner['uid'];
             $insert = [
               "qid" => $randquest['id'],
               "qtid" => $qtid,
-              "uid" => $mybb->user['uid'],
+              "uid" => $partner['uid'],
               "groups" => $groupstring,
             ];
             $db->insert_query("questsystem_quest_user", $insert);
@@ -1777,7 +1798,7 @@ function questsystem_show()
             "qid" => $randquest['id'],
             "qtid" => $qtid,
             "uid" => $mybb->user['uid'],
-            "groups" => ($groupstring),
+            "groups" => $groupstring,
           ];
           $db->insert_query("questsystem_quest_user", $insert);
 
@@ -1795,6 +1816,14 @@ function questsystem_show()
     output_page($questsystem_misc_main);
     die();
   }
+}
+
+$plugins->add_hook("misc_start", "questsystem_show_progress");
+function questsystem_show_progress()
+{
+  global $db, $mybb, $templates, $header, $footer, $theme, $headerinclude, $lang, $takequest, $questsystem_nav, $questsystem_nav_points;
+
+  if (!$mybb->get_input('action') == "questsystem_progress") return;
 
   if ($mybb->get_input('action') == "questsystem_progress") {
     if ($mybb->get_input('delete') != "") {
@@ -1811,9 +1840,8 @@ function questsystem_show()
 
     $questsystem_misc_progress = "";
     $lang->load('questsystem');
-    add_breadcrumb($lang->questsystem_name, "misc.php?action=misc.php?action=questsystem");
-    eval("\$questsystem_nav = \"" . $templates->get("questsystem_nav") . "\";");
-
+    add_breadcrumb($lang->questsystem_name . " - Aktuelle Quests", "misc.php?action=misc.php?action=questsystem_progress");
+    questsystem_navigation();
 
     $charas = questsystem_get_allchars($mybb->user['uid']);
     $cnt = 0;
@@ -1831,6 +1859,7 @@ function questsystem_show()
 
         //Noch kein Quest zugeteilt, wartet auf admin zuteilung
         if ($quest['qid'] == 0) {
+          $delete_link = "";
           $daysend  = "";
           $waiting = $lang->questsystem_waiting;
           $success = "";
@@ -1906,13 +1935,21 @@ function questsystem_show()
     output_page($questsystem_misc_progress);
     die();
   }
+}
+
+$plugins->add_hook("misc_start", "questsystem_show_done");
+function questsystem_show_done()
+{
+  global $db, $mybb, $templates, $header, $footer, $theme, $headerinclude, $lang, $takequest, $questsystem_nav, $questsystem_nav_points;
+
+  if (!$mybb->get_input('action') == "questsystem_done") return;
 
   if ($mybb->input['action'] == "questsystem_done") {
     $quest = false;
     $questsystem_misc_done = "";
     $lang->load('questsystem');
-    add_breadcrumb($lang->questsystem_name, "misc.php?action=misc.php?action=questsystem_done");
-    eval("\$questsystem_nav = \"" . $templates->get("questsystem_nav") . "\";");
+    add_breadcrumb($lang->questsystem_name . " - Erledigte Quests", "misc.php?action=misc.php?action=^");
+    questsystem_navigation();
 
     $charas = questsystem_get_allchars($mybb->user['uid']);
     $cnt = 0;
@@ -2018,11 +2055,19 @@ function questsystem_show()
     output_page($questsystem_misc_done);
     die();
   }
+}
+
+$plugins->add_hook("misc_start", "questsystem_show_submit");
+function questsystem_show_submit()
+{
+  global $db, $mybb, $templates, $header, $footer, $theme, $headerinclude, $lang, $takequest, $questsystem_nav, $questsystem_nav_points;
+
+  if (!$mybb->get_input('action') == "questsystem_submit") return;
+
   if ($mybb->input['action'] == "questsystem_submit") {
     $lang->load('questsystem');
-    add_breadcrumb($lang->questsystem_name, "misc.php?action=misc.php?action=questsystem_submit");
-    eval("\$questsystem_nav = \"" . $templates->get("questsystem_nav") . "\";");
-
+    add_breadcrumb($lang->questsystem_name . " - Questeinreichen", "misc.php?action=misc.php?action=questsystem_submit");
+    questsystem_navigation();
     $questsystem_misc_submit = "";
 
 
@@ -2062,29 +2107,90 @@ function questsystem_show()
     output_page($questsystem_misc_submit);
     die();
   }
-  //Ein Quest wird im Post als fertig markiert:
-  if ($mybb->input['action'] == "questsystem_submitquest") {
-    // $qid = $fetch_field($db->simple_select("questsystem_quest", "id", ),"id");
-    $questdata = $db->fetch_array($db->simple_select("questsystem_quest_user", "*", "id = {$mybb->input['questid']}"));
-    $pid = $mybb->input['pid'];
-    $tid = $mybb->input['tid'];
-    $thisuser = $mybb->user['uid'];
-    if ($questdata['groups'] != 0) {
-      $user_arr = explode(",", $questdata['groups']);
+}
+
+$plugins->add_hook("misc_start", "questsystem_show_overview");
+function questsystem_show_overview()
+{
+  global $db, $mybb, $templates, $header, $footer, $theme, $headerinclude, $lang, $takequest, $questsystem_nav, $questsystem_nav_points, $questsystem_misc_overviewquests, $questsystem_overview_points;
+
+
+  if (!$mybb->get_input('action') == "questsystem_points") return;
+
+  if ($mybb->input['action'] == "questsystem_points") {
+    if ($mybb->settings['questsystem_overview_overall']) {
+      $lang->load('questsystem');
+      add_breadcrumb($lang->questsystem_name . " - Punkteübersicht", "misc.php?action=misc.php?action=questsystem_submit");
+      questsystem_navigation();
+      $questsystem_misc_overview = "";
+      $questsystem_misc_overviewquests = "";
+      $questsystem_misc_overviewpoints = "";
+      // questsystem_overview_quest
+      if ($mybb->settings['questsystem_overview_quest']) {
+        //Alle User bekommen, die ein Quest machen
+        $query_questuser = $db->write_query("SELECT uid FROM `" . TABLE_PREFIX . "questsystem_points` GROUP by uid");
+        while ($questuser = $db->fetch_array($query_questuser)) {
+          //pro user die quests sammeln
+          $quests = "";
+          $userinfo = get_user($questuser['uid']);
+          $username = build_profile_link($userinfo['username'],  $userinfo['uid']);;
+          $quests_user = $db->simple_select("questsystem_quest_user", "*", "uid = '{$questuser['uid']}'", array("order_by" => "done"));
+          while ($questuser = $db->fetch_array($quests_user)) {
+
+            $questname = $db->fetch_field($db->write_query("SELECT name FROM `" . TABLE_PREFIX . "questsystem_quest` WHERE id = '{$questuser['qid']}'"), "name");
+            if ($questuser['done'] == 0) {
+              $status = " - in progress";
+            } else {
+              $status = " - done";
+            }
+
+            $quests .= "<div class=\"\">{$questname}{$status}</div>";
+          }
+          eval("\$questsystem_misc_overviewquestsbit .= \"" . $templates->get("questsystem_misc_overviewquestsbit") . "\";");
+        }
+        eval("\$questsystem_misc_overviewquests = \"" . $templates->get("questsystem_misc_overviewquests") . "\";");
+      }
+
+      // questsystem_overview_points
+      if ($mybb->settings['questsystem_overview_points']) {
+        //Alle User bekommen, die ein Quest machen
+        $query_questuser = $db->write_query("SELECT uid FROM `" . TABLE_PREFIX . "questsystem_points` GROUP by uid");
+        while ($questuser = $db->fetch_array($query_questuser)) {
+          //pro user die quests sammeln
+          $points_reasons = "";
+          $userinfo = get_user($questuser['uid']);
+          $username = build_profile_link($userinfo['username'],  $userinfo['uid']);;
+          $quests_points = $db->simple_select("questsystem_points", "*", "uid = '{$questuser['uid']}'");
+
+          $quests_points_sum = $db->fetch_field($db->write_query("SELECT sum(points) as summe FROM " . TABLE_PREFIX . "questsystem_points  WHERE uid = '{$questuser['uid']}' GROUP BY uid"), "summe");
+
+          while ($questpoint = $db->fetch_array($quests_points)) {
+            if ($questpoint['objectid'] != "" && $questpoint['objectid'] != 0) {
+              $questname = $db->fetch_field(
+                $db->write_query("SELECT name FROM `" . TABLE_PREFIX . "questsystem_quest` WHERE id = '{$questpoint['objectid']}'"),
+                "name"
+              ) . " - ";
+            } else {
+              $questname = "";
+            }
+            $points_reasons .= "<div class=\"\">{$questname}{$questpoint['points']} {$questpoint['reason']}</div>";
+          }
+          $points_reasons .= "";
+
+          eval("\$questsystem_misc_overviewpoints_bit .= \"" . $templates->get("questsystem_misc_overviewpoints_bit") . "\";");
+        }
+        eval("\$questsystem_misc_overviewpoints = \"" . $templates->get("questsystem_misc_overviewquests") . "\";");
+
+
+
+        eval("\$questsystem_misc_overviewpoints = \"" . $templates->get("questsystem_misc_overviewpoints") . "\";");
+      }
+      eval("\$questsystem_misc_overview = \"" . $templates->get("questsystem_misc_overview") . "\";");
+      output_page($questsystem_misc_overview);
+      die();
     } else {
-      $user_arr[0] = $thisuser;
+      error("Die Punkteübersicht ist deaktiviert", "Punkteübersicht - Questsystem");
     }
-    foreach ($user_arr as $uid) {
-      $update = [
-        "done" => 2,
-        "pid" => $pid,
-        "tid" => $tid
-      ];
-      // echo $uid ."and". $questdata['qid']; 
-      $db->update_query("questsystem_quest_user", $update, "qid = {$questdata['qid']} and  uid = '{$thisuser}' ");
-    }
-    redirect("showthread.php?tid={$tid}&pid={$pid}#pid{$pid}");
-    die();
   }
 }
 
@@ -2208,12 +2314,13 @@ function questsystem_index()
             "points" => $points,
             "reason" => "Punkte für erledigtes Quest.",
             "date" => date("Y-m-d"),
+            "objectid" => $mybb->get_input('qid', MyBB::INPUT_INT),
           );
           $db->insert_query("questsystem_points", $insert);
         }
       } else {
         // Quest als erledigt markieren
-        $db->update_query("questsystem_quest_user", $update, "id = {$mybb->input['id']} ");
+        $db->update_query("questsystem_quest_user", $update, "id = '{$mybb->input['id']}' ");
 
         // uid hinzufügen (wer hat das Quest schon mal gemacht)
         $get_uids .= ",{$mybb->input['uid']}";
@@ -2224,6 +2331,7 @@ function questsystem_index()
           "points" => $points,
           "reason" => "Punkte für erledigtes Quest.",
           "date" => date("Y-m-d"),
+          "objectid" => $mybb->get_input('qid', MyBB::INPUT_INT),
         );
         $db->insert_query("questsystem_points", $insert);
       }
@@ -2302,10 +2410,24 @@ function questsystem_index()
       eval("\$questsystem_index_mod = \"" . $templates->get("questsystem_index_mod") . "\";");
     }
   }
-  // Meldung dein Quest läuft bald aus
-
 }
 
+function questsystem_navigation()
+{
+  global $mybb, $templates, $questsystem_nav, $questsystem_nav_points;
+  if (
+    $mybb->get_input('action') == "questsystem_points" ||
+    $mybb->get_input('action') == "questsystem_submit" ||
+    $mybb->get_input('action') == "questsystem_done" ||
+    $mybb->get_input('action') == "questsystem_progress" ||
+    $mybb->get_input('action') == "questsystem"
+  ) {
+    if ($mybb->settings['questsystem_overview_overall']) {
+      eval("\$questsystem_nav_points = \"" . $templates->get("questsystem_nav_points") . "\";");
+    }
+    eval("\$questsystem_nav = \"" . $templates->get("questsystem_nav") . "\";");
+  }
+}
 /**
  * Testet ob ein User das Quest sehen/benutzen darf
  */
@@ -2599,14 +2721,19 @@ function questsystem_add_db($type = "install")
       `points` int(11) NOT NULL DEFAULT 0,
       `reason` varchar(150)  DEFAULT '0',
       `date` date NOT NULL,
+      `objectid` int(11) NOT NULL DEFAULT 0,
       PRIMARY KEY (`id`)
        ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_general_ci;");
+  }
+  if (!$db->field_exists("objectid", "questsystem_points")) {
+    $db->add_column("questsystem_points", "objectid", "int(11) NOT NULL DEFAULT 0");
   }
 }
 
 function questsystem_add_templates($type = "install")
 {
   global $db;
+  $templates = array();
   //add templates and stylesheets
   // Add templategroup
   if ($type == "install") {
@@ -2618,17 +2745,17 @@ function questsystem_add_templates($type = "install")
     $db->insert_query("templategroups", $templategrouparray);
   }
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_index_mod',
     "template" => '<div class="reservations_index pm_alert">
-    {$questsystem_index_mod_bit}
+      {$questsystem_index_mod_bit}
       </div>',
     "sid" => "-2",
     "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_index_mod_bit',
     "template" => '{$markup}',
     "sid" => "-2",
@@ -2636,127 +2763,124 @@ function questsystem_add_templates($type = "install")
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_misc_done',
     "template" => '<html>
-    <head>
-    <title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
-    {$headerinclude}
-    
-    </head>
-    <body>
-    {$header}
-      <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
-        <tr>
-		<td class="trow2" colspan="5">
-		<h1>Questsystem</h1>
-			<div class="questshow-container">
-					{$questsystem_nav}
-				<div class="questshow__item questshow-main">
-				
-									<div class="questshow-howto">
-										<h2>ErledigteQuests</h2>
-Hier hast du eine Übersicht über die Quests, die du erledigt hast.
-<br/>
-<br />
-					</div>
-      			{$questsystem_misc_quests_done}
-					
-					
-<h2>Abgelaufene Quests</h2>
-Hier hast du eine Übersicht über die Quests,  die abgelaufen sind, ohne dass du sie abgeschlossen hast
-					<br/>
-<br />
-				{$questsystem_misc_quests_expired}
-				</div>
-			</div>
-		</td>
-      </table>
-		<br />
-    {$footer}
-    </body>
-    </html>',
+      <head>
+      <title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
+      {$headerinclude}
+      
+      </head>
+      <body>
+      {$header}
+        <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
+          <tr>
+      <td class="trow2" colspan="5">
+      <h1>Questsystem</h1>
+        <div class="questshow-container">
+            {$questsystem_nav}
+          <div class="questshow__item questshow-main">		
+            <div class="questshow-howto">
+              <h2>ErledigteQuests</h2>
+              Hier hast du eine Übersicht über die Quests, die du erledigt hast.
+              <br/>
+              <br />
+            </div>
+              {$questsystem_misc_quests_done}			
+            <h2>Abgelaufene Quests</h2>
+            Hier hast du eine Übersicht über die Quests,  die abgelaufen sind, ohne dass du sie abgeschlossen hast
+                      <br/>
+            <br />
+          {$questsystem_misc_quests_expired}
+          </div>
+        </div>
+      </td>
+        </table>
+      <br />
+      {$footer}
+      </body>
+      </html>',
     "sid" => "-2",
     "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_misc_main',
     "template" => '<html>
-    <head>
-    <title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
-    {$headerinclude}
-    
-    </head>
-    <body>
-    {$header}
-      <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
-        <tr>
-		<td class="trow2" colspan="5">
-		<h1>Questsystem</h1>
-			<div class="questshow-container">
-					{$questsystem_nav}
-				<div class="questshow__item questshow-main">
-				
-									<div class="questshow-howto">
-										<h2>Questsystem</h2>
-                   Willkommen im Questsystem, hier könnt ihr euch Aufgaben ziehen oder zuteilen lassen. Viel Spaß! 
-					</div>
-      			{$questsystem_misc_questtypbit}
-				</div>
-			</div>
-		</td>
-      </table>
-		<br /> 
-    {$footer}
-<link rel="stylesheet" href="{$mybb->asset_url}/jscripts/select2/select2.css?ver=1807">
-<script type="text/javascript" src="{$mybb->asset_url}/jscripts/select2/select2.min.js?ver=1806"></script>
-<script type="text/javascript">
-<!--
-if(use_xmlhttprequest == "1")
-{
-    MyBB.select2();
-    $("#s2id_autogen1").select2({
-        placeholder: "{$lang->search_user}",
-        minimumInputLength: 2,
-        maximumSelectionSize: "",
-        multiple: true,
-        ajax: { // instead of writing the function to execute the request we use Select2s convenient helper
-            url: "xmlhttp.php?action=get_users",
-            dataType: "json",
-            data: function (term, page) {
-                return {
-                    query: term, // search term
-                };
-            },
-            results: function (data, page) { // parse the results into the format expected by Select2.
-                // since we are using custom formatting functions we do not need to alter remote JSON data
-                return {results: data};
-            }
-        },
-        initSelection: function(element, callback) {
-            var query = $(element).val();
-            if (query !== "") {
-                var newqueries = [];
-                exp_queries = query.split(",");
-                $.each(exp_queries, function(index, value ){
-                    if(value.replace(/\s/g, "") != "")
-                    {
-                        var newquery = {
-                            id: value.replace(/,\s?/g, ","),
-                            text: value.replace(/,\s?/g, ",")
+        <head>
+        <title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
+        {$headerinclude}
+        
+        </head>
+        <body>
+        {$header}
+          <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
+            <tr>
+        <td class="trow2" colspan="5">
+        <h1>Questsystem</h1>
+          <div class="questshow-container">
+              {$questsystem_nav}
+            <div class="questshow__item questshow-main">
+            
+                      <div class="questshow-howto">
+                        <h2>Questsystem</h2>
+                      Willkommen im Questsystem, hier könnt ihr euch Aufgaben ziehen oder zuteilen lassen. Viel Spaß! 
+              </div>
+                {$questsystem_misc_questtypbit}
+            </div>
+          </div>
+        </td>
+          </table>
+        <br /> 
+        {$footer}
+        <link rel="stylesheet" href="{$mybb->asset_url}/jscripts/select2/select2.css?ver=1807">
+        <script type="text/javascript" src="{$mybb->asset_url}/jscripts/select2/select2.min.js?ver=1806"></script>
+        <script type="text/javascript">
+        <!--
+        if(use_xmlhttprequest == "1")
+        {
+            MyBB.select2();
+            $("#s2id_autogen1").select2({
+                placeholder: "{$lang->search_user}",
+                minimumInputLength: 2,
+                maximumSelectionSize: "",
+                multiple: true,
+                ajax: { // instead of writing the function to execute the request we use Select2s convenient helper
+                    url: "xmlhttp.php?action=get_users",
+                    dataType: "json",
+                    data: function (term, page) {
+                        return {
+                            query: term, // search term
                         };
-                        newqueries.push(newquery);
+                    },
+                    results: function (data, page) { // parse the results into the format expected by Select2.
+                        // since we are using custom formatting functions we do not need to alter remote JSON data
+                        return {results: data};
                     }
-                });
-                callback(newqueries);
-            }
+                },
+                initSelection: function(element, callback) {
+                    var query = $(element).val();
+                    if (query !== "") {
+                        var newqueries = [];
+                        exp_queries = query.split(",");
+                        $.each(exp_queries, function(index, value ){
+                            if(value.replace(/\s/g, "") != "")
+                            {
+                                var newquery = {
+                                    id: value.replace(/,\s?/g, ","),
+                                    text: value.replace(/,\s?/g, ",")
+                                };
+                                newqueries.push(newquery);
+                            }
+                        });
+                        callback(newqueries);
+                    }
+                }
+            });
         }
-    });
-}
-// -->
-</script> 
+        // -->
+        </script> 
     </body>
     </html>',
     "sid" => "-2",
@@ -2764,200 +2888,200 @@ if(use_xmlhttprequest == "1")
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_misc_progress',
     "template" => '<html>
-    <head>
-    <title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
-    {$headerinclude}
-    
-    </head>
-    <body>
-    {$header}
-      <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
-        <tr>
-		<td class="trow2" colspan="5">
-		<h1>Questsystem</h1>
-			<div class="questshow-container">
-					{$questsystem_nav}
-				<div class="questshow__item questshow-main">
-				
-									<div class="questshow-howto">
-										<h2>Deine aktuellen Quests</h2>
-Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche noch nicht erledigt sind
-<br/>
-<br />
-					</div>
-      			{$questsystem_misc_quests_progress}
-				</div>
-			</div>
-		</td>
-      </table>
-		<br />
-    {$footer}
-    </body>
-    </html>',
+      <head>
+      <title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
+      {$headerinclude}
+      
+      </head>
+      <body>
+      {$header}
+        <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
+          <tr>
+      <td class="trow2" colspan="5">
+      <h1>Questsystem</h1>
+        <div class="questshow-container">
+            {$questsystem_nav}
+          <div class="questshow__item questshow-main">
+          
+                    <div class="questshow-howto">
+                      <h2>Deine aktuellen Quests</h2>
+            Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche noch nicht erledigt sind
+            <br/>
+            <br />
+            </div>
+              {$questsystem_misc_quests_progress}
+          </div>
+        </div>
+      </td>
+        </table>
+      <br />
+      {$footer}
+      </body>
+      </html>',
     "sid" => "-2",
     "version" => "",
     "dateline" => TIME_NOW
   );
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_misc_quests_done',
     "template" => '{$username_tit}
-    <div class="questtypbit tborder">
-      <div class="questtypbit__item">
-        <h3>{$type[\\\'name\\\']}</h3>
-        {$waiting}
-        <div class="questdescr">{$questdata[\\\'questdescr\\\']}</div>
-        <div class="questrules">
-          {$expired}
-          {$pointsadd}
-          {$pointsminus}
-          {$group}
-          {$success}		
+      <div class="questtypbit">
+        <div class="questtypbit__item tborder">
+          <h3>{$type[\\\'name\\\']}</h3>
+          {$waiting}
+          <div class="questdescr">{$questdata[\\\'questdescr\\\']}</div>
+          <div class="questrules">
+            {$expired}
+            {$pointsadd}
+            {$pointsminus}
+            {$group}
+            {$success}		
+          </div>
         </div>
-      </div>
-    </div>',
+      </div>',
     "sid" => "-2",
     "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_misc_quests_progress',
     "template" => '{$username_tit}
-    <div class="questtypbit">
-    
-      <div class="questtypbit__item">
-        <h3>{$type[\\\'name\\\']}: {$questdata[\\\'name\\\']}</h3>
-        {$delete_link}
-        {$waiting} 
-        <div class="questdescr">{$questdata[\\\'questdescr\\\']}</div>
-        <div class="questrules">
-          {$daysend}
-          {$pointsadd}
-          {$pointsminus}
-          {$group}
-          {$success}
-          {$submitted}
+      <div class="questtypbit">
+      
+        <div class="questtypbit__item">
+          <h3>{$type[\\\'name\\\']}: {$questdata[\\\'name\\\']}</h3>
+          {$delete_link}
+          {$waiting} 
+          <div class="questdescr">{$questdata[\\\'questdescr\\\']}</div>
+          <div class="questrules">
+            {$daysend}
+            {$pointsadd}
+            {$pointsminus}
+            {$group}
+            {$success}
+            {$submitted}
+          </div>
         </div>
-      </div>
-    </div>',
+      </div>',
     "sid" => "-2",
     "version" => "",
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_misc_questtypbit',
     "template" => '<div class="questtypbit">
-    <h2>{$type[\\\'name\\\']}</h2>
-    <div class="questtypbit__item">
-      <div class="questdescr">{$type[\\\'typedescr\\\']}</div>
-      <div class="questrules">
-          <input type="hidden" value="{$type[\\\'id\\\']}" name="questid"/>
-          {$daysend}
-          {$pointsadd}
-          {$pointsminus}
-          {$success}
-          {$admin}
-          {$takequest}
-      
-      </div>
-    </div>
-  </div>',
-    "sid" => "-2",
-    "version" => "",
-    "dateline" => TIME_NOW
-  );
-  $template[] = array(
-    "title" => 'questsystem_misc_submit',
-    "template" => '<html>
-    <head>
-    <title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
-    {$headerinclude}
-    
-    </head>
-    <body>
-    {$header}
-      <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
-        <tr>
-		<td class="trow2" colspan="5">
-		<h1>Quest einreichen</h1>
-			<div class="questshow-container">
-					{$questsystem_nav}
-<div class="questshow__item questshow-main">			
-	<div class="questshow-howto">									
-		Hier kannst du ein Quest einreichen, damit es von einem Moderator freigeschaltet werden kann. <br/><br />
-	</div>
-      	<form id="submitquestform" method="post" action="misc.php?action=questsystem_submit">
-			<div class="submitquestform__item">
-			<input type="text" id="quest_name" name="quest_name" placeholder="Name des Quests" value=""/ required>
-			</div>
-			<div class="submitquestform__item">
-			{$select_typ_group}	
-			</div>
-			<div class="submitquestform__item">
-			<textarea id="quest_dscr" name="quest_dscr" rows="4" cols="50" placeholder="Aussagekräftige Beschreibung" required></textarea>
-			</div>
-			<div class="submitquestform__item submitbutton">
-            <input type="submit" id="submit_quest" name="submit_quest" value="Quest einreichen"/>
-			</div>
-         </form>
-					
-			</div>
-			</div>
-		</td>
-      </table>
-		<br />
-    {$footer}
-    </body>
-    </html>',
-    "sid" => "-2",
-    "version" => "",
-    "dateline" => TIME_NOW
-  );
-
-  $template[] = array(
-    "title" => 'questsystem_nav',
-    "template" => '<div class="questshow__item questshow-nav">
-    <div class="nav__item">
-      <a href="misc.php?action=questsystem">Quest Start</a>
-    </div>
-    <div class="nav__item">
-      <a href="misc.php?action=questsystem_progress">Deine aktuellen Quests</a>
-    </div>
-    <div class="nav__item">
-      <a href="misc.php?action=questsystem_done">Deine erledigten Quests</a>
-    </div>
-    <div class="nav__item">
-      <a href="misc.php?action=questsystem_submit">Quest einreichen</a>
-    </div>
-  </div>',
-    "sid" => "-2",
-    "version" => "",
-    "dateline" => TIME_NOW
-  );
-
-  $template[] = array(
-    "title" => 'questsystem_member_bit',
-    "template" => '<span class="questsystem__points"><strong>{$punkte}</strong> » {$reason} » {$date}</span>
-',
-    "sid" => "-2",
-    "version" => "",
-    "dateline" => TIME_NOW
-  );
-
-  $template[] = array(
-    "title" => 'questsystem_member',
-    "template" => '
-    <div class="questsystem__profile">
-    <h2>{$username}</h2>
-      » hat insgesamt {$points_sum} gesammelt
-        <div class="questsystem__profilecontainer ">
-        {$questsystem_member_bit}
+      <h2>{$type[\\\'name\\\']}</h2>
+      <div class="questtypbit__item">
+        <div class="questdescr">{$type[\\\'typedescr\\\']}</div>
+        <div class="questrules">
+            <input type="hidden" value="{$type[\\\'id\\\']}" name="questid"/>
+            {$daysend}
+            {$pointsadd}
+            {$pointsminus}
+            {$success}
+            {$admin}
+            {$takequest}
+        
         </div>
       </div>
+      </div>',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+  $templates[] = array(
+    "title" => 'questsystem_misc_submit',
+    "template" => '<html>
+      <head>
+      <title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
+      {$headerinclude}
+      
+      </head>
+      <body>
+      {$header}
+        <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
+          <tr>
+      <td class="trow2" colspan="5">
+      <h1>Quest einreichen</h1>
+        <div class="questshow-container">
+            {$questsystem_nav}
+        <div class="questshow__item questshow-main">			
+         <div class="questshow-howto">									
+          Hier kannst du ein Quest einreichen, damit es von einem Moderator freigeschaltet werden kann. <br/><br />
+        </div>
+          <form id="submitquestform" method="post" action="misc.php?action=questsystem_submit">
+        <div class="submitquestform__item">
+        <input type="text" id="quest_name" name="quest_name" placeholder="Name des Quests" value=""/ required>
+        </div>
+        <div class="submitquestform__item">
+        {$select_typ_group}	
+        </div>
+        <div class="submitquestform__item">
+        <textarea id="quest_dscr" name="quest_dscr" rows="4" cols="50" placeholder="Aussagekräftige Beschreibung" required></textarea>
+        </div>
+        <div class="submitquestform__item submitbutton">
+              <input type="submit" id="submit_quest" name="submit_quest" value="Quest einreichen"/>
+        </div>
+          </form>
+            
+        </div>
+        </div>
+      </td>
+        </table>
+      <br />
+      {$footer}
+      </body>
+      </html>',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_nav',
+    "template" => '<div class="questshow__item questshow-nav">
+      <div class="nav__item">
+        <a href="misc.php?action=questsystem">Quest Start</a>
+      </div>
+      <div class="nav__item">
+        <a href="misc.php?action=questsystem_progress">Deine aktuellen Quests</a>
+      </div>
+      <div class="nav__item">
+        <a href="misc.php?action=questsystem_done">Deine erledigten Quests</a>
+      </div>
+      <div class="nav__item">
+        <a href="misc.php?action=questsystem_submit">Quest einreichen</a>
+      </div>
+      </div>',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_member_bit',
+    "template" => '<span class="questsystem__points"><strong>{$punkte}</strong> » {$reason} » {$date}</span>
+      ',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_member',
+    "template" => '
+      <div class="questsystem__profile">
+      <h2>{$username}</h2>
+        » hat insgesamt {$points_sum} gesammelt
+          <div class="questsystem__profilecontainer ">
+          {$questsystem_member_bit}
+          </div>
+        </div>
     ',
     "sid" => "-2",
     "version" => "",
@@ -2965,7 +3089,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
   );
 
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_form_grouprequest',
     "template" => '
           <span class="groupquest"><br/>Möchtest du ein Gruppenquest erledigen? <br/>
@@ -2982,7 +3106,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_form_takequest',
     "template" => '<form id="{$quest_type}" method="post" action="">
             <input type="hidden" name="id" value="{$type[\\\'id\\\']}">
@@ -2996,7 +3120,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_form_takequest_random',
     "template" => '<form id="{$quest_type}" method="post" action="misc.php?action=questsystem&type={$quest_type}">
           <input type="hidden" value="{$type[\\\'id\\\']}" name="questid"/>
@@ -3009,7 +3133,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_index_mod_bit_quest',
     "template" => '<div class="quest_index__item"><b>Questvorschlag</b><br/>
       <p class="quest_index_descr">{$quest_in[\\\'name\\\']}: 
@@ -3026,7 +3150,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
       <textarea name="questdescr" id="questdescr" placeholder="Beschreibung" style="height: 80px;"> {$quest_in[\\\'questdescr\\\']}</textarea><br>
            </form>
       <button name="edit_questin" id="editquestin">Submit</button>
-  </div>
+    </div>
       </p>
 
       </div>',
@@ -3035,7 +3159,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_index_mod_bit_user',
     "template" => '<div class="quest_index__item">
       <b>Questzuteilung</b><br/>
@@ -3049,7 +3173,7 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "dateline" => TIME_NOW
   );
 
-  $template[] = array(
+  $templates[] = array(
     "title" => 'questsystem_index_mod_bit_submit',
     "template" => '<div class="quest_index__item">
       <span class="quest_index_descr"><b>Quest Einreichung:</b><br/>{$username} hat ein  <a href="showthread.php?tid={$quest_sub[\\\'tid\\\']}&pid={$quest_sub[\\\'pid\\\']}#pid{$quest_sub[\\\'pid\\\']}">Quest eingereicht.</a><br/>
@@ -3063,8 +3187,119 @@ Hier bekommst du eine Übersicht von den Quests, die du gezogen hast und welche 
     "dateline" => TIME_NOW
   );
 
-  foreach ($template as $row) {
-    $db->insert_query("templates", $row);
+  $templates[] = array(
+    "title" => 'questsystem_nav_points',
+    "template" => '<div class="nav__item">
+        <a href="misc.php?action=questsystem_points">Punkteübersicht</a>
+      </div>',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_misc_overview',
+    "template" => '<html>
+	<head>
+		<title>{$mybb->settings[\\\'bbname\\\']} - Questsystem</title>
+		{$headerinclude}
+
+	</head>
+	<body>
+		{$header}
+		<table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
+			<tr>
+				<td class="trow2" colspan="5">
+					<h1>Questsystem</h1>
+					<div class="questshow-container">
+						{$questsystem_nav}
+						<div class="questshow__item questshow-main">
+							<div class="questshow-overview">
+								<h2>Punkteübersich</h2>
+								Hier findest du eine Übersicht der Punkte.
+								<div class="questshow-overview__container">
+								{$questsystem_misc_overviewquests}
+                {$questsystem_misc_overviewpoints}
+								</div>
+							</div>
+						</div>
+					</div>
+				</td>
+		</table>
+		<br />
+		{$footer}
+	</body>
+</html>',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_misc_overviewquests',
+    "template" => '
+    {$questsystem_misc_overviewquestsbit}
+    ',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_misc_overviewquestsbit',
+    "template" => '
+   questsystem_misc_points_questbit
+    ',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_misc_overviewpoints',
+    "template" => '
+    {$questsystem_misc_overviewpoints_bit}
+    ',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_misc_overviewpoints_bit',
+    "template" => '
+    questsystem_misc_overviewpoints_bit
+    ',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+
+
+  if ($type == 'update') {
+    foreach ($templates as $template) {
+      $query = $db->simple_select("templates", "tid, template", "title = '" . $template['title'] . "' AND sid = '-2'");
+      $existing_template = $db->fetch_array($query);
+
+      if ($existing_template) {
+        if ($existing_template['template'] !== $template['template']) {
+          $db->update_query("templates", array(
+            'template' => $template['template'],
+            'dateline' => TIME_NOW
+          ), "tid = '" . $existing_template['tid'] . "'");
+        }
+      } else {
+        $db->insert_query("templates", $template);
+      }
+    }
+  } else {
+    foreach ($templates as $template) {
+      $check = $db->num_rows($db->simple_select("templates", "title", "title = '" . $template['title'] . "'"));
+      if ($check == 0) {
+        $db->insert_query("templates", $template);
+      }
+    }
   }
 }
 
@@ -3074,7 +3309,7 @@ function questsystem_add_settings($type = "install")
   if ($type == "install") {  //Einstellungen 
     $setting_group = array(
       'name' => 'questsystem',
-      'title' => "Einstellungen Questsystem ",
+      'title' => "Questsystem",
       'description' => "Alle Einstellungen für das Questsystem. ",
       'disporder' => 1,
       'isdefault' => 0
@@ -3113,13 +3348,64 @@ function questsystem_add_settings($type = "install")
       'value' => '10', // Default
       'disporder' => 4
     ),
+    'questsystem_overview_overall' => array(
+      'title' => 'Übersicht Quests?',
+      'description' => 'Soll es eine Übersichtsseite geben?',
+      'optionscode' => 'yesno',
+      'value' => '1', // Default
+      'disporder' => 5
+    ),
+    'questsystem_overview_quest' => array(
+      'title' => 'Übersicht Quests - Quest?',
+      'description' => 'Soll auf der Übersicht angezeigt werden, wer welches Quest macht?',
+      'optionscode' => 'yesno',
+      'value' => '1', // Default
+      'disporder' => 6
+    ),
+    'questsystem_overview_points' => array(
+      'title' => 'Übersicht Quests - Punkte?',
+      'description' => 'Soll auf der Übersichtsseite angezeigt werden, wer wie viele Punkte hat?',
+      'optionscode' => 'yesno',
+      'value' => '1', // Default
+      'disporder' => 7
+    ),
   );
 
-  foreach ($setting_array as $name => $setting) {
-    $setting['name'] = $name;
-    $setting['gid'] = $gid;
-    $db->insert_query('settings', $setting);
+  if ($type == 'install') {
+    foreach ($setting_array as $name => $setting) {
+      $setting['name'] = $name;
+      $setting['gid'] = $gid;
+      $db->insert_query('settings', $setting);
+    }
   }
+
+  if ($type == 'update') {
+    foreach ($setting_array as $name => $setting) {
+      $setting['name'] = $name;
+      $check = $db->write_query("SELECT name FROM `" . TABLE_PREFIX . "settings` WHERE name = '{$name}'");
+      $data = $db->write_query("SELECT name FROM `" . TABLE_PREFIX . "settings` WHERE name = '{$name}'");
+      $check = $db->num_rows($check);
+
+      $setting['gid'] = $gid;
+      if ($check == 0) {
+        $db->insert_query('settings', $setting);
+      } else {
+        //die einstellung gibt es schon, wir testen ob etwas verändert wurde
+        while ($setting_old = $db->fetch_array($data)) {
+          if (
+            $setting_old['title'] != $setting['title'] ||
+            $setting_old['description'] != $setting['description'] ||
+            $setting_old['optionscode'] != $setting['optionscode'] ||
+            $setting_old['value'] != $setting['value'] ||
+            $setting_old['disporder'] != $setting['disporder']
+          ) {
+            $db->update_query('settings', $setting, "name='{$name}'");
+          }
+        }
+      }
+    }
+  }
+
   rebuild_settings();
 }
 
@@ -3200,15 +3486,18 @@ function questsystem_stylesheet()
   return $css;
 }
 
-function questsystem_is_updated()
-{
-  return true;
-}
-
 function questsystem_stylesheet_update()
 {
   $update_array_all = array();
   $update_array = array();
+
+  // $update_array_all[] =
+  //   array(
+  //     'stylesheet' => "
+  //       /* update_string_value - kommentar nicht entfernen */
+  //       ",
+  //     'update_string' => 'update_string_value'
+  //   );
   return $update_array_all;
 }
 
@@ -3226,41 +3515,41 @@ function questsystem_admin_update_plugin(&$table)
 
     //Brauchen wir momentan noch nicht, es gibt noch kein Update :) 
 
-    // $update_data_all = questsystem_stylesheet_update();
-    // foreach ($update_data_all as $update_data) {
-    //   $update_stylesheet = $update_data['stylesheet'];
-    //   $update_string = $update_data['update_string'];
-    //   if (!empty($update_string)) {
-    //     // Ob im Master Style die Überprüfung vorhanden ist
-    //     $masterstylesheet = $db->fetch_field($db->query("SELECT stylesheet FROM " . TABLE_PREFIX . "themestylesheets WHERE tid = 1 AND name = 'lexicon.css'"), "stylesheet");
-    //     $pos = strpos($masterstylesheet, $update_string);
-    //     if ($pos === false) { // nicht vorhanden 
-    //       $theme_query = $db->simple_select('themes', 'tid, name');
-    //       while ($theme = $db->fetch_array($theme_query)) {
-    //         $stylesheet_query = $db->simple_select("themestylesheets", "*", "name='" . $db->escape_string('questsystem.css') . "' AND tid = " . $theme['tid']);
-    //         $stylesheet = $db->fetch_array($stylesheet_query);
-    //         if ($stylesheet) {
-    //           require_once MYBB_ADMIN_DIR . "inc/functions_themes.php";
-    //           $sid = $stylesheet['sid'];
+    $update_data_all = questsystem_stylesheet_update();
+    foreach ($update_data_all as $update_data) {
+      $update_stylesheet = $update_data['stylesheet'];
+      $update_string = $update_data['update_string'];
+      if (!empty($update_string)) {
+        // Ob im Master Style die Überprüfung vorhanden ist
+        $masterstylesheet = $db->fetch_field($db->query("SELECT stylesheet FROM " . TABLE_PREFIX . "themestylesheets WHERE tid = 1 AND name = 'lexicon.css'"), "stylesheet");
+        $pos = strpos($masterstylesheet, $update_string);
+        if ($pos === false) { // nicht vorhanden 
+          $theme_query = $db->simple_select('themes', 'tid, name');
+          while ($theme = $db->fetch_array($theme_query)) {
+            $stylesheet_query = $db->simple_select("themestylesheets", "*", "name='" . $db->escape_string('questsystem.css') . "' AND tid = " . $theme['tid']);
+            $stylesheet = $db->fetch_array($stylesheet_query);
+            if ($stylesheet) {
+              require_once MYBB_ADMIN_DIR . "inc/functions_themes.php";
+              $sid = $stylesheet['sid'];
 
-    //           $updated_stylesheet = array(
-    //             "cachefile" => $db->escape_string($stylesheet['name']),
-    //             "stylesheet" => $db->escape_string($stylesheet['stylesheet'] . "\n\n" . $update_stylesheet),
-    //             "lastmodified" => TIME_NOW
-    //           );
+              $updated_stylesheet = array(
+                "cachefile" => $db->escape_string($stylesheet['name']),
+                "stylesheet" => $db->escape_string($stylesheet['stylesheet'] . "\n\n" . $update_stylesheet),
+                "lastmodified" => TIME_NOW
+              );
 
-    //           $db->update_query("themestylesheets", $updated_stylesheet, "sid='" . $sid . "'");
+              $db->update_query("themestylesheets", $updated_stylesheet, "sid='" . $sid . "'");
 
-    //           if (!cache_stylesheet($theme['tid'], $stylesheet['name'], $updated_stylesheet['stylesheet'])) {
-    //             $db->update_query("themestylesheets", array('cachefile' => "css.php?stylesheet=" . $sid), "sid='" . $sid . "'", 1);
-    //           }
+              if (!cache_stylesheet($theme['tid'], $stylesheet['name'], $updated_stylesheet['stylesheet'])) {
+                $db->update_query("themestylesheets", array('cachefile' => "css.php?stylesheet=" . $sid), "sid='" . $sid . "'", 1);
+              }
 
-    //           update_theme_stylesheet_list($theme['tid']);
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
+              update_theme_stylesheet_list($theme['tid']);
+            }
+          }
+        }
+      }
+    }
   }
   // Zelle mit dem Namen des Themes
   $table->construct_cell("<b>" . htmlspecialchars_uni("Questsystem") . "</b>", array('width' => '70%'));
@@ -3273,4 +3562,71 @@ function questsystem_admin_update_plugin(&$table)
   }
 
   $table->construct_row();
+}
+
+// Stylesheet zum Master Style hinzufügen
+$plugins->add_hook('admin_rpgstuff_update_stylesheet', "questsystem_admin_update_stylesheet");
+function questsystem_admin_update_stylesheet(&$table)
+{
+
+  global $db, $mybb, $lang;
+  $lang->load('rpgstuff_stylesheet_updates');
+
+  require_once MYBB_ADMIN_DIR . "inc/functions_themes.php";
+
+  // HINZUFÜGEN
+  if ($mybb->input['action'] == 'add_master' and $mybb->get_input('plugin') == "questsystem") {
+
+    $css = questsystem_stylesheet();
+
+    $sid = $db->insert_query("themestylesheets", $css);
+    $db->update_query("themestylesheets", array("cachefile" => "questsystem.css"), "sid = '" . $sid . "'", 1);
+
+    $tids = $db->simple_select("themes", "tid");
+    while ($theme = $db->fetch_array($tids)) {
+      update_theme_stylesheet_list($theme['tid']);
+    }
+
+    flash_message($lang->stylesheets_flash, "success");
+    admin_redirect("index.php?module=rpgstuff-stylesheet_updates");
+  }
+
+  // Zelle mit dem Namen des Themes
+  $table->construct_cell("<b>" . htmlspecialchars_uni("Questsystem-Manager") . "</b>", array('width' => '70%'));
+
+  // Ob im Master Style vorhanden
+  $master_check = $db->fetch_field($db->query("SELECT tid FROM " . TABLE_PREFIX . "themestylesheets 
+    WHERE name = 'questsystem.css' 
+    AND tid = 1
+    "), "tid");
+
+  if (!empty($master_check)) {
+    $masterstyle = true;
+  } else {
+    $masterstyle = false;
+  }
+
+  if (!empty($masterstyle)) {
+    $table->construct_cell($lang->stylesheets_masterstyle, array('class' => 'align_center'));
+  } else {
+    $table->construct_cell("<a href=\"index.php?module=rpgstuff-stylesheet_updates&action=add_master&plugin=questsystem\">" . $lang->stylesheets_add . "</a>", array('class' => 'align_center'));
+  }
+  $table->construct_row();
+}
+
+/***
+ * checkt ob das Plugin auf der aktuellen Version ist
+ */
+function questsystem_is_updated()
+{
+  global $db;
+  $check = $db->write_query("SELECT name FROM `" . TABLE_PREFIX . "settings` WHERE name = 'questsystem_overview_overall'");
+
+  if (!$db->num_rows($check)) {
+    return false;
+  }
+  if (!$db->field_exists("objectid", "questsystem_points")) {
+    return false;
+  }
+  return true;
 }
