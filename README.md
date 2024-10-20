@@ -1,23 +1,18 @@
 # Questsystem
 Questsystem für RPGs.
-
+- Allgemeine Einstellungen
 - Questtypen anlegen (Beschränkung für einzelne Gruppen, auch über Profilfeld/Steckbrieffeld)
-  - Einstellung ob Quests ablaufen
-  - Punkte für erledigte Quests (wenn gewünscht)
-  - Abzug wenn Quest nicht abgeschlossen wird (wenn gewünscht)
-  - Questzuteilung über Admin oder zufällig
-  - Gleichzeitiges bearbeiten? Darf das Quest nur von einem User gleichzeitig bearbeitet werden?
-  - Gruppenquest? Dürfen Quests als Gruppenquest eingereicht werden?
-  - Questeinreichung? Dürfen User Quests einreichen?
-  - Abschluss als Post oder gesamte Szene
 - Quests erstellen
 - Quests einreichen (Gruppenquests oder Einzelquests)
 - Optional: Punkte für Quests sammeln
 - Quests erledigen und einreichen
 
-**Alle wichtigen Infos findest du im Wiki**   
+**Alle wichtigen Infos und ausführliche Erklärungen findest du im Wiki**   
 [Zum Wiki](https://github.com/katjalennartz/questsystem/wiki)
 
+**Wichtig** 
+Das RPG Modul von Lara muss installiert sein.  
+[Zum Download](https://github.com/little-evil-genius/rpgstuff_modul)  
 
 ## good to know
 ### Links
@@ -48,4 +43,10 @@ Verwaltung ACP: admin/index.php?module=config-questsystem
 - questsystem_index_mod_bit_quest
 - questsystem_index_mod_bit_user
 - questsystem_index_mod_bit_submit
+- questsystem_nav_points
+- questsystem_misc_overview
+- questsystem_misc_overviewquests
+- questsystem_misc_overviewquestsbit
+- questsystem_misc_overviewpoints
+- questsystem_misc_overviewpoints_bit
 
