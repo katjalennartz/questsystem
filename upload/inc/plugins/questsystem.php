@@ -2120,7 +2120,7 @@ function questsystem_show_overview()
   if ($mybb->input['action'] == "questsystem_points") {
     if ($mybb->settings['questsystem_overview_overall']) {
       $lang->load('questsystem');
-      add_breadcrumb($lang->questsystem_name . " - Punkteübersicht", "misc.php?action=misc.php?action=questsystem_submit");
+      add_breadcrumb($lang->questsystem_name . " - Übersicht", "misc.php?action=misc.php?action=questsystem_submit");
       questsystem_navigation();
       $questsystem_misc_overview = "";
       $questsystem_misc_overviewquests = "";
@@ -3057,6 +3057,7 @@ function questsystem_add_templates($type = "install")
       <div class="nav__item">
         <a href="misc.php?action=questsystem_submit">Quest einreichen</a>
       </div>
+      {$questsystem_nav_points}
       </div>',
     "sid" => "-2",
     "version" => "",
@@ -3190,7 +3191,7 @@ function questsystem_add_templates($type = "install")
   $templates[] = array(
     "title" => 'questsystem_nav_points',
     "template" => '<div class="nav__item">
-        <a href="misc.php?action=questsystem_points">Punkteübersicht</a>
+        <a href="misc.php?action=questsystem_points">Übersicht</a>
       </div>',
     "sid" => "-2",
     "version" => "",
@@ -3215,8 +3216,8 @@ function questsystem_add_templates($type = "install")
 						{$questsystem_nav}
 						<div class="questshow__item questshow-main">
 							<div class="questshow-overview">
-								<h2>Punkteübersich</h2>
-								Hier findest du eine Übersicht der Punkte.
+								<h2>Übersicht</h2>
+								Hier findest du eine Übersicht.
 								<div class="questshow-overview__container">
 								{$questsystem_misc_overviewquests}
                 {$questsystem_misc_overviewpoints}
