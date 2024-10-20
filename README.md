@@ -16,7 +16,7 @@ Questsystem für RPGs.
 - Quests erledigen und einreichen
 
 **Alle wichtigen Infos findest du im Wiki**   
-[Zum Wiki]([https://github.com/little-evil-genius/rpgstuff_modul](https://github.com/katjalennartz/questsystem/wiki))  
+[Zum Wiki](https://github.com/katjalennartz/questsystem/wiki)
 
 
 ## good to know
