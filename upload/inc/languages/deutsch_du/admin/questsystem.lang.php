@@ -133,4 +133,3 @@ $l['questsystem_manage_cqt_admincheck'] = "Quest Freischalten";
 $l['questsystem_manage_cqt_admincheck_back'] = "Quest Zurücknehmen";
 
 $l['questsystem_manage_cqt_admincheck_success'] = "Quest erfolgreich freigeschaltet/zurückgenommen";
-
