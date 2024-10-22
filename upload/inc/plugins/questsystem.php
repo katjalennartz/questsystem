@@ -154,11 +154,19 @@ function questsystem_activate()
     $alertTypeManager->add($alertTypeQuestAccepted);
 
     //alert: eingereichtes Quest wurde abgelehnt
+    $alertTypeQuestAccept = new MybbStuff_MyAlerts_Entity_AlertType();
+    $alertTypeQuestAccept->setCanBeUserDisabled(true);
+    $alertTypeQuestAccept->setCode("questsystem_QuestAccept");
+    $alertTypeQuestAccept->setEnabled(true);
+    $alertTypeManager->add($alertTypeQuestAccept);
+
+    //alert: eingereichtes Quest wurde abgelehnt
     $alertTypeQuestDeny = new MybbStuff_MyAlerts_Entity_AlertType();
     $alertTypeQuestDeny->setCanBeUserDisabled(true);
     $alertTypeQuestDeny->setCode("questsystem_QuestDeny");
     $alertTypeQuestDeny->setEnabled(true);
     $alertTypeManager->add($alertTypeQuestDeny);
+
 
     //alert: User wurde ein Quest zugeteilt
     $alertTypeQuestgiveUserw = new MybbStuff_MyAlerts_Entity_AlertType();
@@ -169,8 +177,6 @@ function questsystem_activate()
   }
   $cache->update_usergroups();
 }
-
-
 
 function questsystem_deactivate()
 {
@@ -183,6 +189,7 @@ function questsystem_deactivate()
       $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
     }
     $alertTypeManager->deleteByCode('questsystem_QuestDeny');
+    $alertTypeManager->deleteByCode('questsystem_QuestAccept');
     $alertTypeManager->deleteByCode('questsystem_giveUser');
     $alertTypeManager->deleteByCode('questsystem_QuestAccepted');
   }
@@ -234,7 +241,6 @@ function questsystem_admin_rpgstuff_menu(&$sub_menu)
     "link" => "index.php?module=rpgstuff-questsystem"
   ];
 }
-
 
 /**
  * Verwaltung der Quests im ACP
@@ -439,28 +445,27 @@ function questsystem_admin_load()
       print_selection_javascript();
       $selected_values = "";
       $select_code = "
-      <dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
-        <dt><label style=\"display: block;\"><input type=\"radio\" name=\"groupselect\" value=\"all\" class=\"groupselect_forums_groups_check\" onclick=\"checkAction('groupselect');\" style=\"vertical-align: middle;\" /> <strong>{$lang->all_groups}</strong></label></dt>
-        <dt><label style=\"display: block;\">
-        <input type=\"radio\" name=\"groupselect\" value=\"custom\"  class=\"groupselect_forums_groups_check\" onclick=\"checkAction('groupselect');\" style=\"vertical-align: middle;\" /> <strong>{$lang->select_groups}</strong></label></dt>
-        <dd style=\"margin-top: 4px;\" id=\"groupselect_forums_groups_custom\" class=\"groupselect_forums_groups\">
-          <table cellpadding=\"4\">
-            <tr>
-              
-              <td colspan=\"2\">" .
+          <dl style=\"margin-top: 0; margin-bottom: 0; width: 100%\">
+            <dt><label style=\"display: block;\"><input type=\"radio\" name=\"groupselect\" value=\"all\" class=\"groupselect_forums_groups_check\" onclick=\"checkAction('groupselect');\" style=\"vertical-align: middle;\" /> <strong>{$lang->all_groups}</strong></label></dt>
+            <dt><label style=\"display: block;\">
+            <input type=\"radio\" name=\"groupselect\" value=\"custom\"  class=\"groupselect_forums_groups_check\" onclick=\"checkAction('groupselect');\" style=\"vertical-align: middle;\" /> <strong>{$lang->select_groups}</strong></label></dt>
+            <dd style=\"margin-top: 4px;\" id=\"groupselect_forums_groups_custom\" class=\"groupselect_forums_groups\">
+              <table cellpadding=\"4\">
+                <tr>
+                  <td colspan=\"2\">" .
         $form->generate_group_select(
           'groupselect_sel[]',
           $selected_values,
           array('id' => 'groupselect_sel', 'multiple' => true, 'size' => 5)
         ) . "</td>
-            </tr>
-          </table>
-        </dd>
-        <dt><label style=\"display: block;\"><input type=\"radio\" name=\"groupselect\" value=\"none\"  class=\"groupselect_forums_groups_check\" onclick=\"checkAction('groupselect');\" style=\"vertical-align: middle;\" /> <strong>{$lang->none}</strong></label></dt>
-      </dl>
-      <script type=\"text/javascript\">
-        checkAction('groupselect');
-      </script>";
+                </tr>
+              </table>
+            </dd>
+            <dt><label style=\"display: block;\"><input type=\"radio\" name=\"groupselect\" value=\"none\"  class=\"groupselect_forums_groups_check\" onclick=\"checkAction('groupselect');\" style=\"vertical-align: middle;\" /> <strong>{$lang->none}</strong></label></dt>
+          </dl>
+          <script type=\"text/javascript\">
+            checkAction('groupselect');
+          </script>";
       $form_container->output_row($lang->questsystem_manage_cqt_group, $lang->questsystem_manage_cqt_group_descr, $select_code, '', array(), array('id' => 'row_groupselect'));
 
       //Nur für beestimmte Gruppen/Profilfeld
@@ -475,7 +480,6 @@ function questsystem_admin_load()
         $lang->questsystem_manage_cqt_groupprofielfield_type_descr,
         $form->generate_text_box('group_profilefield_type', $mybb->input['group_profilefield_type'])
       );
-
       //gibt es ein ablaufdatum? & wieviele tage hat man zeit?
       $form_container->output_row(
         $lang->questsystem_manage_cqt_formenddate, //Name 
@@ -615,7 +619,7 @@ function questsystem_admin_load()
           'types[]',
           $alltypes,
           '',
-          array('id' => 'id', 'multiple' => false, 'size' => 5)
+          array('id' => 'id', 'size' => 5, 'multiple' => null),
         ),
         'questtype'
       );
@@ -865,7 +869,7 @@ function questsystem_admin_load()
           'types[]',
           $alltypes,
           $edit['type'],
-          array('id' => 'id', 'multiple' => false, 'size' => 5)
+          array('id' => 'id', 'multiple' => null, 'size' => 5)
         ),
         'questtype'
       );
@@ -1401,7 +1405,7 @@ function questsystem_admin_load()
           $db->delete_query("questsystem_quest", "id='{$id}'");
 
           //dazugehörige Quests der User löschen
-          $db->delete_query("questsystem_quest_user", "qtid='{$id}'");
+          $db->delete_query("questsystem_quest_user", "qid='{$id}' ");
 
           $mybb->input['module'] = "questsystem";
 
@@ -1755,7 +1759,6 @@ function questsystem_show()
 
           $qtid = $mybb->get_input('questid');
 
-
           $typeinfos =  $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_type WHERE id = {$qtid}"));
 
           //Darf das Quest mehrfach erledigt werden? 
@@ -1774,40 +1777,44 @@ function questsystem_show()
           //zufälliges Quest holen
           if ($mybb->input['partners'] == "" || empty($mybb->input['partners'])) {
             //KEIN GRUPPENQUEST
-            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = {$qtid} " . $in_progress . $repeat . " AND groupquest = 0 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
+            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND  id NOT IN (SELECT QID as ID FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = '{$mybb->user['uid']}}' AND done = 0) AND groupquest = 0 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
           } else {
             //GRUPPENQUEST
-            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND groupquest = 1 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
+            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND id NOT IN (SELECT QID as ID FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = '$mybb->user['uid']}' AND done = 0) AND groupquest = 1 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
 
-            //Beim Partner auch speichern 
-            $userdata = array_filter(explode(",", $mybb->input['partners']));
-            $partner = get_user_by_username($userdata[0]);
+            if (empty($randquest)) {
+              error("Bei diesem Questtyp gibt es zur Zeit keine Quests und du kannst keins ziehen.", "Keine Quests.");
+            } else {
+              //Beim Partner auch speichern 
+              $userdata = array_filter(explode(",", $mybb->input['partners']));
+              $partner = get_user_by_username($userdata[0]);
 
-            $groupstring = $mybb->user['uid'] . "," . $partner['uid'];
+              $groupstring = $mybb->user['uid'] . "," . $partner['uid'];
+              $insert = [
+                "qid" => $randquest['id'],
+                "qtid" => $qtid,
+                "uid" => $partner['uid'],
+                "groups" => $groupstring,
+              ];
+              $db->insert_query("questsystem_quest_user", $insert);
+            }
+
+            //Quest für user speichern
             $insert = [
               "qid" => $randquest['id'],
               "qtid" => $qtid,
-              "uid" => $partner['uid'],
+              "uid" => $mybb->user['uid'],
               "groups" => $groupstring,
             ];
             $db->insert_query("questsystem_quest_user", $insert);
+
+            //Quest auf in progress setzen
+            $update_quest = [
+              "in_progress" => 1,
+            ];
+            $db->update_query("questsystem_quest", $update_quest, "id='{$randquest['id']}'");
+            redirect('misc.php?action=questsystem_progress');
           }
-
-          //Quest für user speichern
-          $insert = [
-            "qid" => $randquest['id'],
-            "qtid" => $qtid,
-            "uid" => $mybb->user['uid'],
-            "groups" => $groupstring,
-          ];
-          $db->insert_query("questsystem_quest_user", $insert);
-
-          //Quest auf in progress setzen
-          $update_quest = [
-            "in_progress" => 1,
-          ];
-          $db->update_query("questsystem_quest", $update_quest, "id='{$randquest['id']}'");
-          redirect('misc.php?action=questsystem_progress');
         }
         eval("\$questsystem_misc_questtypbit .= \"" . $templates->get("questsystem_misc_questtypbit") . "\";");
       }
@@ -2317,8 +2324,39 @@ function questsystem_index()
             "objectid" => $mybb->get_input('qid', MyBB::INPUT_INT),
           );
           $db->insert_query("questsystem_points", $insert);
+          //Alert schicken
+          if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+            $alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('questsystem_QuestAccept');
+            //testen ob es den alertTyp gibt und ob der user einen Alert bekommen möchte
+            if ($alertType != NULL && $alertType->getEnabled()) {
+              //constructor: first: an welchen user , second: type  and third the objectId 
+              $alert = new MybbStuff_MyAlerts_Entity_Alert((int)$uid, $alertType);
+              //some extra details
+              $alert->setExtraDetails([
+                //  'pid' => $questid,
+                //  'tid' => $uid
+              ]);
+              //add the alert
+              MybbStuff_MyAlerts_AlertManager::getInstance()->addAlert($alert);
+            }
+          }
         }
       } else {
+        if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+          $alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('questsystem_QuestAccept');
+          //testen ob es den alertTyp gibt und ob der user einen Alert bekommen möchte
+          if ($alertType != NULL && $alertType->getEnabled()) {
+            //constructor: first: an welchen user , second: type  and third the objectId 
+            $alert = new MybbStuff_MyAlerts_Entity_Alert((int)$mybb->input['uid'], $alertType);
+            //some extra details
+            $alert->setExtraDetails([
+              //  'pid' => $questid,
+              //  'tid' => $uid
+            ]);
+            //add the alert
+            MybbStuff_MyAlerts_AlertManager::getInstance()->addAlert($alert);
+          }
+        }
         // Quest als erledigt markieren
         $db->update_query("questsystem_quest_user", $update, "id = '{$mybb->input['id']}' ");
 
@@ -2646,6 +2684,54 @@ function questsystem_alert()
       new MybbStuff_MyAlerts_Formatter_QuestsystemQuestDenyFormatter($mybb, $lang, 'questsystem_QuestDeny')
     );
   }
+
+  //Info Quest wurde abgelehnt.
+  class MybbStuff_MyAlerts_Formatter_QuestsystemQuestAcceptFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
+  {
+    /**
+     * Build the output string for listing page and the popup.
+     * @param MybbStuff_MyAlerts_Entity_Alert $alert The alert to format.
+     * @return string The formatted alert string.
+     */
+    public function formatAlert(MybbStuff_MyAlerts_Entity_Alert $alert, array $outputAlert)
+    {
+      $alertContent = $alert->getExtraDetails();
+      return $this->lang->sprintf(
+        $this->lang->questsystem_QuestAccept,
+        $outputAlert['name']
+      );
+    }
+    /**
+     * Initialize the language, we need the variables $l['myalerts_setting_alertname'] for user cp! 
+     * and if need initialize other stuff
+     * @return void
+     */
+    public function init()
+    {
+      if (!$this->lang->questsystem) {
+        $this->lang->load('questsystem');
+      }
+    }
+    /**
+     * We want to define where we want to link to. 
+     * @param MybbStuff_MyAlerts_Entity_Alert $alert for which alert.
+     * @return string return the link.
+     */
+    public function buildShowLink(MybbStuff_MyAlerts_Entity_Alert $alert)
+    {
+      $alertContent = $alert->getExtraDetails();
+      return $this->mybb->settings['bburl'] . '/misc.php?action=questsystem';
+    }
+  }
+  if (class_exists('MybbStuff_MyAlerts_AlertFormatterManager')) {
+    $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::getInstance();
+    if (!$formatterManager) {
+      $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::createInstance($mybb, $lang);
+    }
+    $formatterManager->registerFormatter(
+      new MybbStuff_MyAlerts_Formatter_QuestsystemQuestAcceptFormatter($mybb, $lang, 'questsystem_QuestAccept')
+    );
+  }
 }
 
 /**
@@ -2814,6 +2900,9 @@ function questsystem_add_templates($type = "install")
         
         </head>
         <body>
+        <link rel="stylesheet" href="{$mybb->asset_url}/jscripts/select2/select2.css?ver=1807">
+        <script type="text/javascript" src="{$mybb->asset_url}/jscripts/select2/select2.min.js?ver=1806"></script>
+        
         {$header}
           <table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
             <tr>
@@ -2834,53 +2923,6 @@ function questsystem_add_templates($type = "install")
           </table>
         <br /> 
         {$footer}
-        <link rel="stylesheet" href="{$mybb->asset_url}/jscripts/select2/select2.css?ver=1807">
-        <script type="text/javascript" src="{$mybb->asset_url}/jscripts/select2/select2.min.js?ver=1806"></script>
-        <script type="text/javascript">
-        <!--
-        if(use_xmlhttprequest == "1")
-        {
-            MyBB.select2();
-            $("#s2id_autogen1").select2({
-                placeholder: "{$lang->search_user}",
-                minimumInputLength: 2,
-                maximumSelectionSize: "",
-                multiple: true,
-                ajax: { // instead of writing the function to execute the request we use Select2s convenient helper
-                    url: "xmlhttp.php?action=get_users",
-                    dataType: "json",
-                    data: function (term, page) {
-                        return {
-                            query: term, // search term
-                        };
-                    },
-                    results: function (data, page) { // parse the results into the format expected by Select2.
-                        // since we are using custom formatting functions we do not need to alter remote JSON data
-                        return {results: data};
-                    }
-                },
-                initSelection: function(element, callback) {
-                    var query = $(element).val();
-                    if (query !== "") {
-                        var newqueries = [];
-                        exp_queries = query.split(",");
-                        $.each(exp_queries, function(index, value ){
-                            if(value.replace(/\s/g, "") != "")
-                            {
-                                var newquery = {
-                                    id: value.replace(/,\s?/g, ","),
-                                    text: value.replace(/,\s?/g, ",")
-                                };
-                                newqueries.push(newquery);
-                            }
-                        });
-                        callback(newqueries);
-                    }
-                }
-            });
-        }
-        // -->
-        </script> 
     </body>
     </html>',
     "sid" => "-2",
@@ -3099,8 +3141,53 @@ function questsystem_add_templates($type = "install")
             <b>Achtung:</b> vor dem Eintragen, abklären ob der User einverstanden ist.<br/>
           
             <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-            class="select2-input select2-default" id="s2id_autogen1" tabindex="1" placeholder="" name="partners"><br/><br/>
+            class="select2-input select2-default" id="complete_{$type[\\\'id\\\']}" tabindex="1" placeholder="" name="partners"><br/><br/>
           </span>
+          <script type="text/javascript">
+        <!--
+        if(use_xmlhttprequest == "1")
+        {
+            MyBB.select2();
+            $("#complete_{$type[\\\'id\\\']}").select2({
+                placeholder: "{$lang->search_user}",
+                minimumInputLength: 2,
+                maximumSelectionSize: "",
+                multiple: true,
+                ajax: { // instead of writing the function to execute the request we use Select2s convenient helper
+                    url: "xmlhttp.php?action=get_users",
+                    dataType: "json",
+                    data: function (term, page) {
+                        return {
+                            query: term, // search term
+                        };
+                    },
+                    results: function (data, page) { // parse the results into the format expected by Select2.
+                        // since we are using custom formatting functions we do not need to alter remote JSON data
+                        return {results: data};
+                    }
+                },
+                initSelection: function(element, callback) {
+                    var query = $(element).val();
+                    if (query !== "") {
+                        var newqueries = [];
+                        exp_queries = query.split(",");
+                        $.each(exp_queries, function(index, value ){
+                            if(value.replace(/\s/g, "") != "")
+                            {
+                                var newquery = {
+                                    id: value.replace(/,\s?/g, ","),
+                                    text: value.replace(/,\s?/g, ",")
+                                };
+                                newqueries.push(newquery);
+                            }
+                        });
+                        callback(newqueries);
+                    }
+                }
+            });
+        }
+        // -->
+        </script> 
     ',
     "sid" => "-2",
     "version" => "",
