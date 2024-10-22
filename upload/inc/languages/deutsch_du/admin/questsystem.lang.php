@@ -18,7 +18,7 @@ $l['questsystem_sendQuestPoints'] = 'Punkte für einen Questvorschlag.';
 //Questtyp anlegen
 $l['questsystem_manage_createquesttype'] = "Questsystem Questtyp anlegen";
 $l['questsystem_manage_addquest'] = "Quest erstellen";
-$l['questsystem_management'] = "Quest Verwaltung";
+$l['questsystem_management'] = "Questverwaltung";
 
 $l['questsystem_manage_cqt_formname'] = "Name: <em>*</em>";
 $l['questsystem_manage_cqt_formname_descr'] = "Wie heißt der Questtyp?";
@@ -40,11 +40,11 @@ $l['questsystem_cqt_error_groupselect'] = "Bitte triff eine Auswahl für die Gru
 $l['questsystem_manage_cqt_formenddate'] = "Laufen Quests des Typs ab? <em>*</em>";
 $l['questsystem_manage_cqt_formenddate_descr'] = "Wenn ja, nach wievielen Tagen? (Sonst einfach 0 eintragen) ";
 
-$l['questsystem_manage_cqt_groupprofielfield'] = "Gruppen aus Profilfeder oder Steckbriefplugin? <em>*</em>";
+$l['questsystem_manage_cqt_groupprofielfield'] = "Gruppen aus Profilfelder oder Steckbriefplugin? <em>*</em>";
 $l['questsystem_manage_cqt_groupprofielfield_descr'] = "Gib hier den genauen String ein, für welches die Gruppe gelten soll. Für mehrere , getrennt. Achtung keine Typos!";
 
 $l['questsystem_manage_cqt_groupprofielfield_type'] = "Profilfeld oder Steckbrieffeld? <em>*</em>";
-$l['questsystem_manage_cqt_groupprofielfield_type_descr'] = "Gib entweder die id(nur nummer!) des Profilfelds ein, oder die eindeutige Bezeichnung fürs Steckbrieffeld";
+$l['questsystem_manage_cqt_groupprofielfield_type_descr'] = "Gib entweder die id(nur die Nummer!) des Profilfelds ein, oder die eindeutige Bezeichnung fürs Steckbrieffeld";
 
 $l['questsystem_manage_cqt_addpoints'] = "Punkte für abgeschlossenes Quest <em>*</em>";
 $l['questsystem_manage_cqt_addpoints_descr'] = "Wenn ja, wieviele? (Sonst einfach 0 eintragen) ";
@@ -53,7 +53,7 @@ $l['questsystem_manage_cqt_subpoints'] = "Punktabzug für nicht abgeschlossenes 
 $l['questsystem_manage_cqt_subpoints_descr'] = "Wenn ja, wieviele? (Sonst einfach 0 eintragen) ";
 
 $l['questsystem_manage_cqt_formadmin_assignment'] = "Questzuteilung <em>*</em>";
-$l['questsystem_manage_cqt_formadmin_assignment_descr'] = "Muss ein Admin ein Quest zuteilen? Sonst wird es zufällig ausgewählt.";
+$l['questsystem_manage_cqt_formadmin_assignment_descr'] = "Muss ein Admin das Quest zuteilen? Sonst wird es zufällig ausgewählt.";
 
 $l['questsystem_manage_cqt_formadmin_delete'] = "Ablehnen <em>*</em>";
 $l['questsystem_manage_cqt_formadmin_delete_descr'] = "Dürfen User das Quest ablehnen?";
@@ -133,3 +133,4 @@ $l['questsystem_manage_cqt_admincheck'] = "Quest Freischalten";
 $l['questsystem_manage_cqt_admincheck_back'] = "Quest Zurücknehmen";
 
 $l['questsystem_manage_cqt_admincheck_success'] = "Quest erfolgreich freigeschaltet/zurückgenommen";
+
