@@ -9,8 +9,8 @@
  * 
  */
 // enable for Debugging:
-error_reporting(E_ERROR | E_PARSE);
-ini_set('display_errors', true);
+// error_reporting(E_ERROR | E_PARSE);
+// ini_set('display_errors', true);
 
 
 
@@ -1778,13 +1778,46 @@ function questsystem_show()
           if ($mybb->input['partners'] == "" || empty($mybb->input['partners'])) {
             //KEIN GRUPPENQUEST
             $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND  id NOT IN (SELECT QID as ID FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = '{$mybb->user['uid']}}' AND done = 0) AND groupquest = 0 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
-          } else {
-            //GRUPPENQUEST
-            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND id NOT IN (SELECT QID as ID FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = '$mybb->user['uid']}' AND done = 0) AND groupquest = 1 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
-
             if (empty($randquest)) {
               error("Bei diesem Questtyp gibt es zur Zeit keine Quests und du kannst keins ziehen.", "Keine Quests.");
             } else {
+              //Quest für user speichern
+              $insert = [
+                "qid" => $randquest['id'],
+                "qtid" => $qtid,
+                "uid" => $mybb->user['uid'],
+                "groups" => $groupstring,
+              ];
+              $db->insert_query("questsystem_quest_user", $insert);
+
+              //Quest auf in progress setzen
+              $update_quest = [
+                "in_progress" => 1,
+              ];
+              $db->update_query("questsystem_quest", $update_quest, "id='{$randquest['id']}'");
+            }
+          } else {
+            //GRUPPENQUEST
+            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND id NOT IN (SELECT QID as ID FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = '$mybb->user['uid']}' AND done = 0) AND groupquest = 1 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
+            if (empty($randquest)) {
+              error("Bei diesem Questtyp gibt es zur Zeit keine Quests und du kannst keins ziehen.", "Keine Quests.");
+            } else {
+              $groupstring = "";
+              //Quest für user speichern
+              $insert = [
+                "qid" => $randquest['id'],
+                "qtid" => $qtid,
+                "uid" => $mybb->user['uid'],
+                "groups" => $groupstring,
+              ];
+              $db->insert_query("questsystem_quest_user", $insert);
+
+              //Quest auf in progress setzen
+              $update_quest = [
+                "in_progress" => 1,
+              ];
+              $db->update_query("questsystem_quest", $update_quest, "id='{$randquest['id']}'");
+
               //Beim Partner auch speichern 
               $userdata = array_filter(explode(",", $mybb->input['partners']));
               $partner = get_user_by_username($userdata[0]);
@@ -1798,23 +1831,10 @@ function questsystem_show()
               ];
               $db->insert_query("questsystem_quest_user", $insert);
             }
-
-            //Quest für user speichern
-            $insert = [
-              "qid" => $randquest['id'],
-              "qtid" => $qtid,
-              "uid" => $mybb->user['uid'],
-              "groups" => $groupstring,
-            ];
-            $db->insert_query("questsystem_quest_user", $insert);
-
-            //Quest auf in progress setzen
-            $update_quest = [
-              "in_progress" => 1,
-            ];
-            $db->update_query("questsystem_quest", $update_quest, "id='{$randquest['id']}'");
-            redirect('misc.php?action=questsystem_progress');
           }
+
+
+          redirect('misc.php?action=questsystem_progress');
         }
         eval("\$questsystem_misc_questtypbit .= \"" . $templates->get("questsystem_misc_questtypbit") . "\";");
       }
