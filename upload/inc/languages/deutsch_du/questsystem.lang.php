@@ -37,6 +37,5 @@ $l['questsystem_QuestDeny'] = 'Deine Questeinreichung/Aufgabe wurde nicht akzept
 $l['myalerts_setting_questsystem_QuestAccept'] = 'Questsystem: Benachrichtigung wenn ein eingereichtes Quest akzeptiert wurde?';
 $l['questsystem_QuestAccept'] = 'Deine Questeinreichung/Aufgabe wurde akzeptiert.';
 
-
-
-
+$l['myalerts_setting_questsystem_QuestPartner'] = 'Questsystem: Benachrichtigung wenn man als Questpartner eingetragen wurde?';
+$l['questsystem_QuestPartner'] = 'Du wurdest als Partner für ein Quest eingetragen. Schau in deiner Questübersicht nach.';
