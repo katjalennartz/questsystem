@@ -9,8 +9,8 @@
  * 
  */
 // enable for Debugging:
-// error_reporting(E_ERROR | E_PARSE);
-// ini_set('display_errors', true);
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', true);
 
 
 
@@ -1798,7 +1798,7 @@ function questsystem_show()
             }
           } else {
             //GRUPPENQUEST
-            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND id NOT IN (SELECT QID as ID FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = '$mybb->user['uid']}' AND done = 0) AND groupquest = 1 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
+            $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND id NOT IN (SELECT QID as ID FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = '{$mybb->user['uid']}' AND done = 0) AND groupquest = 1 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
             if (empty($randquest)) {
               error("Bei diesem Questtyp gibt es zur Zeit keine Quests und du kannst keins ziehen.", "Keine Quests.");
             } else {
