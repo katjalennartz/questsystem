@@ -174,6 +174,13 @@ function questsystem_activate()
     $alertTypeQuestgiveUserw->setCode("questsystem_giveUser");
     $alertTypeQuestgiveUserw->setEnabled(true);
     $alertTypeManager->add($alertTypeQuestgiveUserw);
+
+    //alert: User wurde als Partner eingetragen
+    $alertTypeQuestPartner = new MybbStuff_MyAlerts_Entity_AlertType();
+    $alertTypeQuestPartner->setCanBeUserDisabled(true);
+    $alertTypeQuestPartner->setCode("questsystem_QuestPartner");
+    $alertTypeQuestPartner->setEnabled(true);
+    $alertTypeManager->add($alertTypeQuestPartner);
   }
   $cache->update_usergroups();
 }
@@ -191,6 +198,7 @@ function questsystem_deactivate()
     $alertTypeManager->deleteByCode('questsystem_QuestDeny');
     $alertTypeManager->deleteByCode('questsystem_QuestAccept');
     $alertTypeManager->deleteByCode('questsystem_giveUser');
+    $alertTypeManager->deleteByCode('questsystem_QuestPartner');
     $alertTypeManager->deleteByCode('questsystem_QuestAccepted');
   }
 
@@ -698,10 +706,18 @@ function questsystem_admin_load()
             // Von Wann bis wann wird das Quest bearbeitet 
             $end = " ({$user['startdate']} - {$user['enddate']}), ";
             if ($daystoend == 0) {
-              $end = " (kein Ablaufdatum)";
+              $end = " (kein Ablaufdatum) ";
+            }
+            if ($quest['groupquest'] == 1) {
+              $grpstr = "," . $user['groups'] . ",";
+              // ,17,23,
+              $grpstr = str_replace("," . $user['uid'] . ",", "", $grpstr);
+              $grpstr = trim(str_replace(",", "", $grpstr));
+              $partnerinfo = get_user($grpstr);
+              $partner = " mit {$partnerinfo['username']}";
             }
             //Info zu dem User zusammenbauen
-            $usersstr .= build_profile_link($userinfo['username'], $userinfo['uid']) . $end;
+            $usersstr .= "<span style=\"background-color: #8080806e; display: inline-block; padding:2px 4px; margin-left:5px;\">" . build_profile_link($userinfo['username'], $userinfo['uid']) . $partner . $end . "</span>";
           }
 
           //Popup menü bauen. 
@@ -753,7 +769,7 @@ function questsystem_admin_load()
             '<span style="padding-left:10px"><i>' . $group . '</i></span>' .
             '<div style="margin: 5px; margin-left:10px; max-height:50px; overflow: auto">' . htmlspecialchars_uni($quest['questdescr']) .
             '</div>' .
-            '<b>User:</b> ' .
+            '<b>User:</b><br/> ' .
             $usersstr . '<br/>                  
                   <br />' . $popup->fetch()
             . '</div>';
@@ -764,12 +780,24 @@ function questsystem_admin_load()
         if ($questtype['admin_assignment'] == 1) {
           $admin = "Admin muss Quests zuteilen <br>";
           // User die warten
-          $awaiting_user_get = $db->simple_select("questsystem_quest_user", "uid", "qtid={$questtype['id']} AND qid = 0");
+          $awaiting_user_get = $db->simple_select("questsystem_quest_user", "*", "qtid={$questtype['id']} AND qid = 0");
           $await_usersstr = "<b>wartende User:</b> ";
           // durchgehen und anzeige bauen
           while ($awaiting_user = $db->fetch_array($awaiting_user_get)) {
             $await_uinfo = get_user($awaiting_user['uid']);
-            $await_usersstr .= build_profile_link($await_uinfo['username'], $await_uinfo['uid']) . ", ";
+
+            if ($awaiting_user['groups'] != "" && $awaiting_user['groups'] != "0" && !empty($awaiting_user['groups'])) {
+              $grpstr = "," . $awaiting_user['groups'] . ",";
+              // ,17,23,
+              $grpstr = str_replace("," . $awaiting_user['uid'] . ",", "", $grpstr);
+              $grpstr = trim(str_replace(",", "", $grpstr));
+              $partnerinfo = get_user($grpstr);
+              $partner = " mit {$partnerinfo['username']}";
+            } else {
+              $partner = "";
+            }
+
+            $await_usersstr .= "<span style=\"background-color: #8080806e; display: inline-block; padding:2px 4px; margin-left:5px;\">" . build_profile_link($await_uinfo['username'], $await_uinfo['uid']) . $partner . "</span> ";
           }
         } else {
           $admin = "";
@@ -1742,12 +1770,26 @@ function questsystem_show()
 
           $qtid = $mybb->get_input('id');
           $typeinfos =  $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_type WHERE id = {$qtid}"));
+          //Gruppenquest - auch für partner eintragen
+          $groupstring = "";
+          if ($mybb->input['partners'] != "") {
+            $partneruid = get_user_by_username($mybb->input['partners']);
+            $groupstring = $mybb->user['uid'] . "," . $partneruid['uid'];
+            $insert = [
+              "qid" => 0,
+              "qtid" => $qtid,
+              "uid" => $partneruid['uid'],
+              "groups" => $groupstring,
+            ];
+            $db->insert_query("questsystem_quest_user", $insert);
+          }
 
           // Ziehen eines Quests, welches zugeteilt werden muss -> User in die Warteschlange packen
           $insert = [
             "qid" => 0,
             "qtid" => $qtid,
             "uid" => $mybb->user['uid'],
+            "groups" => $groupstring,
           ];
           $db->insert_query("questsystem_quest_user", $insert);
 
@@ -1781,6 +1823,7 @@ function questsystem_show()
             if (empty($randquest)) {
               error("Bei diesem Questtyp gibt es zur Zeit keine Quests und du kannst keins ziehen.", "Keine Quests.");
             } else {
+              $groupstring = "";
               //Quest für user speichern
               $insert = [
                 "qid" => $randquest['id'],
@@ -1804,13 +1847,6 @@ function questsystem_show()
             } else {
               $groupstring = "";
               //Quest für user speichern
-              $insert = [
-                "qid" => $randquest['id'],
-                "qtid" => $qtid,
-                "uid" => $mybb->user['uid'],
-                "groups" => $groupstring,
-              ];
-              $db->insert_query("questsystem_quest_user", $insert);
 
               //Quest auf in progress setzen
               $update_quest = [
@@ -1827,6 +1863,13 @@ function questsystem_show()
                 "qid" => $randquest['id'],
                 "qtid" => $qtid,
                 "uid" => $partner['uid'],
+                "groups" => $groupstring,
+              ];
+              $db->insert_query("questsystem_quest_user", $insert);
+              $insert = [
+                "qid" => $randquest['id'],
+                "qtid" => $qtid,
+                "uid" => $mybb->user['uid'],
                 "groups" => $groupstring,
               ];
               $db->insert_query("questsystem_quest_user", $insert);
@@ -1854,6 +1897,7 @@ function questsystem_show_progress()
 
   if ($mybb->get_input('action') == "questsystem_progress") {
     if ($mybb->get_input('delete') != "") {
+      //TODO Das der partner löschen
       //questid bekommen
       $id = $mybb->get_input('delete');
       $questid = $mybb->get_input('questid');
@@ -1891,6 +1935,20 @@ function questsystem_show_progress()
           $waiting = $lang->questsystem_waiting;
           $success = "";
           $submitted = "";
+          $partner_str = "";
+          $partner_arr = array();
+          if ($quest['groups'] != 0  || $quest['groups'] != "") {
+            $partner_arr = explode(",", $quest['groups']);
+            foreach ($partner_arr as $p_uid) {
+              if ($p_uid != $uid) {
+                $partner = get_user($p_uid);
+                $partner_str .= "<span class=\"quest-partnerlink\"> " . build_profile_link($partner['username'], $p_uid) . " </span>";
+              }
+            }
+            $group = "<span><b>Gruppenquest mit:</b> " . $partner_str . "</span>";
+          } else {
+            $group = "";
+          }
         } else {
           $waiting = "";
           if ($type['enddays'] == NULL) {
@@ -1925,18 +1983,21 @@ function questsystem_show_progress()
           } else {
             $pointsminus = "";
           }
-
+          $partner_arr = array();
           if ($questdata['groupquest'] == 1) {
-            $getpartners = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = {$uid} AND qid = {$quest['qid']}"));
-            $partner_arr = explode(",", $getpartners['groups']);
             $partner_str = "";
-            foreach ($partner_arr as $p_uid) {
-              if ($p_uid != $uid) {
-                $partner = get_user($p_uid);
-                $partner_str .= "<span class=\"quest-partnerlink\">" . build_profile_link($partner['username'], $p_uid) . " </span>";
-              } else {
+            if ($quest['groups'] != 0 || !empty($quest['groups']) || $quest['groups'] != "") {
+              $partner_arr = explode(",", $quest['groups']);
+              foreach ($partner_arr as $p_uid) {
+                if ($p_uid != $uid) {
+                  $partner = get_user($p_uid);
+                  $partner_str .= "<span class=\"quest-partnerlink\">" . build_profile_link($partner['username'], $p_uid) . " </span>";
+                } else {
+                  $partner_str = "";
+                }
               }
             }
+
             $group = "<span><b>Gruppenquest mit:</b> " . $partner_str . "</span>";
           } else {
             $group = "";
@@ -2752,6 +2813,54 @@ function questsystem_alert()
       new MybbStuff_MyAlerts_Formatter_QuestsystemQuestAcceptFormatter($mybb, $lang, 'questsystem_QuestAccept')
     );
   }
+
+    //Info Quest als Partner eingetragen
+    class MybbStuff_MyAlerts_Formatter_QuestsystemQuestPartnerFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
+    {
+      /**
+       * Build the output string for listing page and the popup.
+       * @param MybbStuff_MyAlerts_Entity_Alert $alert The alert to format.
+       * @return string The formatted alert string.
+       */
+      public function formatAlert(MybbStuff_MyAlerts_Entity_Alert $alert, array $outputAlert)
+      {
+        $alertContent = $alert->getExtraDetails();
+        return $this->lang->sprintf(
+          $this->lang->questsystem_QuestPartner,
+          $outputAlert['name']
+        );
+      }
+      /**
+       * Initialize the language, we need the variables $l['myalerts_setting_alertname'] for user cp! 
+       * and if need initialize other stuff
+       * @return void
+       */
+      public function init()
+      {
+        if (!$this->lang->questsystem) {
+          $this->lang->load('questsystem');
+        }
+      }
+      /**
+       * We want to define where we want to link to. 
+       * @param MybbStuff_MyAlerts_Entity_Alert $alert for which alert.
+       * @return string return the link.
+       */
+      public function buildShowLink(MybbStuff_MyAlerts_Entity_Alert $alert)
+      {
+        $alertContent = $alert->getExtraDetails();
+        return $this->mybb->settings['bburl'] . '/misc.php?action=questsystem_progress';
+      }
+    }
+    if (class_exists('MybbStuff_MyAlerts_AlertFormatterManager')) {
+      $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::getInstance();
+      if (!$formatterManager) {
+        $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::createInstance($mybb, $lang);
+      }
+      $formatterManager->registerFormatter(
+        new MybbStuff_MyAlerts_Formatter_QuestsystemQuestAcceptFormatter($mybb, $lang, 'questsystem_QuestPartner')
+      );
+    }
 }
 
 /**
@@ -3391,8 +3500,6 @@ function questsystem_add_templates($type = "install")
     "version" => "",
     "dateline" => TIME_NOW
   );
-
-
 
   if ($type == 'update') {
     foreach ($templates as $template) {
