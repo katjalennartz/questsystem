@@ -7,7 +7,6 @@ $l['questsystem_web'] = "https://github.com/katjalennartz";
 
 $l['questsystem_overview'] = "Übersicht";
 
-
 $l['questsystem_adminsetting'] = "Darf das Questsystem verwalten?";
 //Questtyp Übersicht
 $l['questsystem_manage_overview'] = "Questsystem Overview";
@@ -33,7 +32,7 @@ $l['questsystem_manage_cqt_typdescr_descr'] = "Hier eine Beschreibung einfügen.
 $l['questsystem_cqt_error_typdescr'] = "Bitte gib eine Beschreibung für den Typen an.";
 
 $l['questsystem_manage_cqt_group'] = "Welche Gruppen? <em>*</em>";
-$l['questsystem_manage_cqt_group_descr'] = "Von welchen Gruppen darf dieser Questtyp bearbeitet werden?";
+$l['questsystem_manage_cqt_group_descr'] = "Welche Gruppen dürfen diesen Questtypen machen?";
 $l['questsystem_cqt_error_groupselect'] = "Bitte triff eine Auswahl für die Gruppen.";
 
 
@@ -41,10 +40,10 @@ $l['questsystem_manage_cqt_formenddate'] = "Laufen Quests des Typs ab? <em>*</em
 $l['questsystem_manage_cqt_formenddate_descr'] = "Wenn ja, nach wievielen Tagen? (Sonst einfach 0 eintragen) ";
 
 $l['questsystem_manage_cqt_groupprofielfield'] = "Gruppen aus Profilfelder oder Steckbriefplugin? <em>*</em>";
-$l['questsystem_manage_cqt_groupprofielfield_descr'] = "Gib hier den genauen String ein, für welches die Gruppe gelten soll. Für mehrere , getrennt. Achtung keine Typos!";
+$l['questsystem_manage_cqt_groupprofielfield_descr'] = "Möchtest du über ein Profilfeld, oder Steckbrieffeld einschränken, wer diesen Questtypen machen kann (z.B. Hufflepuff), dann gib hier den entsprechenden (genauen!) String ein, der auch im Profilfeld steht. Für mehrere , getrennt. Achtung keine Typos!";
 
 $l['questsystem_manage_cqt_groupprofielfield_type'] = "Profilfeld oder Steckbrieffeld? <em>*</em>";
-$l['questsystem_manage_cqt_groupprofielfield_type_descr'] = "Gib entweder die id(nur die Nummer!) des Profilfelds ein, oder die eindeutige Bezeichnung fürs Steckbrieffeld";
+$l['questsystem_manage_cqt_groupprofielfield_type_descr'] = "Wenn du Gruppen, die den Questtyp machen dürfen, darüber auswählst, gib nun hier entweder die id(nur die Nummer!) des Profilfelds ein, oder die eindeutige Bezeichnung fürs Steckbrieffeld";
 
 $l['questsystem_manage_cqt_addpoints'] = "Punkte für abgeschlossenes Quest <em>*</em>";
 $l['questsystem_manage_cqt_addpoints_descr'] = "Wenn ja, wieviele? (Sonst einfach 0 eintragen) ";
@@ -133,4 +132,3 @@ $l['questsystem_manage_cqt_admincheck'] = "Quest Freischalten";
 $l['questsystem_manage_cqt_admincheck_back'] = "Quest Zurücknehmen";
 
 $l['questsystem_manage_cqt_admincheck_success'] = "Quest erfolgreich freigeschaltet/zurückgenommen";
-
