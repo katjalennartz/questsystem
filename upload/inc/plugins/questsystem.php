@@ -392,7 +392,7 @@ function questsystem_admin_load()
             "name" => $db->escape_string($mybb->get_input('name')),
             "type" => $db->escape_string($mybb->get_input('name_db')),
             "typedescr" => $db->escape_string($mybb->get_input('descr')),
-            "groups" => $grpstring,
+            "groups_allowed" => $grpstring,
             // "groups_questdepend" => implode(",", $mybb->input['users']),
             "enddays" => $end,
             "points_minus" => $points_minus,
@@ -704,20 +704,29 @@ function questsystem_admin_load()
             // Infos zur uid bekommen
             $userinfo = get_user($user['uid']);
             // Von Wann bis wann wird das Quest bearbeitet 
+            if ($user['done'] == 1) {
+              $status_start = "<s>";
+              $status_end = "</s> erledigt";
+            } else {
+              $status_start = "";
+              $status_end = "";
+            }
             $end = " ({$user['startdate']} - {$user['enddate']}), ";
             if ($daystoend == 0) {
               $end = " (kein Ablaufdatum) ";
             }
             if ($quest['groupquest'] == 1) {
-              $grpstr = "," . $user['groups'] . ",";
+              $grpstr = "," . $user['groups_uids'] . ",";
               // ,17,23,
               $grpstr = str_replace("," . $user['uid'] . ",", "", $grpstr);
               $grpstr = trim(str_replace(",", "", $grpstr));
               $partnerinfo = get_user($grpstr);
               $partner = " mit {$partnerinfo['username']}";
+            } else {
+              $partner = "";
             }
             //Info zu dem User zusammenbauen
-            $usersstr .= "<span style=\"background-color: #8080806e; display: inline-block; padding:2px 4px; margin-left:5px;\">" . build_profile_link($userinfo['username'], $userinfo['uid']) . $partner . $end . "</span>";
+            $usersstr .= "<span style=\"background-color: #8080806e; display: inline-block; padding:2px 4px; margin-left:5px;\">" . $status_start . build_profile_link($userinfo['username'], $userinfo['uid']) . $partner . $end . $status_end . "</span>";
           }
 
           //Popup menü bauen. 
@@ -786,8 +795,8 @@ function questsystem_admin_load()
           while ($awaiting_user = $db->fetch_array($awaiting_user_get)) {
             $await_uinfo = get_user($awaiting_user['uid']);
 
-            if ($awaiting_user['groups'] != "" && $awaiting_user['groups'] != "0" && !empty($awaiting_user['groups'])) {
-              $grpstr = "," . $awaiting_user['groups'] . ",";
+            if ($awaiting_user['groups_uids'] != "" && $awaiting_user['groups_uids'] != "0" && !empty($awaiting_user['groups_uids'])) {
+              $grpstr = "," . $awaiting_user['groups_uids'] . ",";
               // ,17,23,
               $grpstr = str_replace("," . $awaiting_user['uid'] . ",", "", $grpstr);
               $grpstr = trim(str_replace(",", "", $grpstr));
@@ -989,7 +998,7 @@ function questsystem_admin_load()
             "name" => $db->escape_string($mybb->input['name']),
             "type" => $db->escape_string($mybb->input['name_db']),
             "typedescr" => $db->escape_string($mybb->input['descr']),
-            "groups" => $grpstring,
+            "groups_allowed" => $grpstring,
             // "groups_questdepend" => implode(",", $mybb->input['users']),
             "enddays" => $end,
             "points_minus" => $points_minus,
@@ -1051,13 +1060,13 @@ function questsystem_admin_load()
 
       //nur bestimmte Gruppen?  (allgemein)
       print_selection_javascript();
-      if ($edit['groups'] == "-1") {
+      if ($edit['groups_allowed'] == "-1") {
         $sel_all = "CHECKED";
-      } else if ($edit['groups'] == "") {
+      } else if ($edit['groups_allowed'] == "") {
         $sel_none = "CHECKED";
       } else {
         $sel_gr = "CHECKED";
-        $selected_values = explode(",", $edit['groups']);
+        $selected_values = explode(",", $edit['groups_allowed']);
         // $sel = ""; 
       }
       // var_dump($selected_values);
@@ -1463,23 +1472,18 @@ function questsystem_admin_load()
 
         if (empty($errors)) {
           $questype = $db->fetch_field($db->simple_select("questsystem_quest", "type", "id = {$questid}"), "type");
-          $arr_uids = array_filter($mybb->input['waiting']);
-          $userids = implode(",", $arr_uids);
+          $arr_uids_str = $mybb->get_input('waiting');
+          $arr_uids = array();
+          $arr_uids = explode(",", $arr_uids_str);
 
-          if ($questinfo['groups'] != 0 || !empty($questinfo['groups'])) {
-            $addeduids = $questinfo['groups'] . "," . $userids;
-          } else {
-            $addeduids =  $userids;
-          }
+
           $today = date("Y-m-d h:i", time());
           foreach ($arr_uids as $uid) {
-
             if ($questinfo['groupquest'] == 1) {
               $update = [
                 "qid" => $questid,
                 "uid" => $uid,
                 "startdate" => $today,
-                "groups" => $addeduids
               ];
             } else {
               $update = [
@@ -1537,11 +1541,27 @@ function questsystem_admin_load()
 
         //wartende User des Questtypen bekommen
         $awaiting_user = array();
-        $userdata = $db->simple_select("questsystem_quest_user", "*", "qid=0 AND qtid = {$questtypeinfo['id']} ");
+        $awaiting_justsingle = array();
+        $userdata = $db->simple_select("questsystem_quest_user", "*", "qid=0 AND qtid = {$questtypeinfo['id']} GROUP BY groups_uids");
+
         while ($result = $db->fetch_array($userdata)) {
+          if ($result['groups_uids'] != '') {
+            $partnerstring = $result['groups_uids'];
+            $uids = explode(",", $result['groups_uids']);
+            $selectstr = "";
+            foreach ($uids as $partner) {
+              $userinfo = get_user($partner);
+              $selectstr .= $userinfo['username'] . " - ";
+            }
+            $selectstr = substr($selectstr, 0, -2);
+            $awaiting_user[$partnerstring] = $selectstr;
+          } else {
           $uid = $result['uid'];
           $userinfo = get_user($uid);
-          $awaiting_user[$uid] = $userinfo['username'];
+            $selectstr = $userinfo['username'];
+            $awaiting_user[$uid] = $selectstr;
+            $awaiting_justsingle[$uid] = $selectstr;
+          }
         }
         //sortieren
         asort($awaiting_user);
@@ -1549,17 +1569,15 @@ function questsystem_admin_load()
         array_filter($awaiting_user);
         //Gruppenquest, ja oder nein? 
         if ($questinfos['groupquest'] == 1) {
-          //Gruppenquest mehrere user können ausgewählt werden
           $form_container->output_row(
-            "Zuteilung für: <b>" . $questinfos['name'] . "</b>", //Name 
+            $questinfos['name'], //Name 
             "<i>" . $questinfos['questdescr'] . "</i>",
-            "<p style=\"padding-left:20px;\"><b>alle wartenden User des Questtyps {$questtypeinfo['name']}</b><br/>" .
-              "Gruppenquest: Mehrfachauswahl möglich<br/>" .
+            "<p style=\"padding-left:20px;\"><b>wartende User des Questtyps({$questtypeinfo['name']})</b><br/>" .
               $form->generate_select_box(
-                'waiting[]',
+                'waiting',
                 $awaiting_user,
                 '',
-                array('id' => 'user', 'multiple' => true, 'size' => 5)
+                array('id' => 'user')
               ) . "</p>"
           );
         } else {
@@ -1569,8 +1587,8 @@ function questsystem_admin_load()
             "<i>" . $questinfos['questdescr'] . "</i>",
             "<p style=\"padding-left:20px;\"><b>wartende User des Questtyps({$questtypeinfo['name']})</b><br/>" .
               $form->generate_select_box(
-                'waiting[]',
-                $awaiting_user,
+                'waiting',
+                $awaiting_justsingle,
                 '',
                 array('id' => 'user')
               ) . "</p>"
@@ -1683,8 +1701,8 @@ function questsystem_show()
     $pid = $mybb->input['pid'];
     $tid = $mybb->input['tid'];
     $thisuser = $mybb->user['uid'];
-    if ($questdata['groups'] != 0) {
-      $user_arr = explode(",", $questdata['groups']);
+    if ($questdata['groups_uids'] != 0) {
+      $user_arr = explode(",", $questdata['groups_uids']);
     } else {
       $user_arr[0] = $thisuser;
     }
@@ -1779,9 +1797,23 @@ function questsystem_show()
               "qid" => 0,
               "qtid" => $qtid,
               "uid" => $partneruid['uid'],
-              "groups" => $groupstring,
+              "groups_uids" => $groupstring,
             ];
             $db->insert_query("questsystem_quest_user", $insert);
+
+            //alert an partner
+            if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+              $alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('questsystem_QuestPartner');
+              //testen ob es den alertTyp gibt und ob der user einen Alert bekommen möchte
+              if ($alertType != NULL && $alertType->getEnabled()) {
+                //constructor: first: an welchen user , second: type  and third the objectId 
+                $alert = new MybbStuff_MyAlerts_Entity_Alert((int)$partneruid['uid'], $alertType);
+                //some extra details
+                $alert->setExtraDetails([]);
+                //add the alert
+                MybbStuff_MyAlerts_AlertManager::getInstance()->addAlert($alert);
+              }
+            }
           }
 
           // Ziehen eines Quests, welches zugeteilt werden muss -> User in die Warteschlange packen
@@ -1789,14 +1821,14 @@ function questsystem_show()
             "qid" => 0,
             "qtid" => $qtid,
             "uid" => $mybb->user['uid'],
-            "groups" => $groupstring,
+            "groups_uids" => $groupstring,
           ];
           $db->insert_query("questsystem_quest_user", $insert);
 
           redirect('misc.php?action=questsystem_progress');
         }
 
-        if ($mybb->input['take_random']) {
+        if ($mybb->get_input('take_random')) {
           // Ziehen eines Quests, welches zufällig zugeordnet wird
 
           $qtid = $mybb->get_input('questid');
@@ -1804,7 +1836,7 @@ function questsystem_show()
           $typeinfos =  $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_type WHERE id = {$qtid}"));
 
           //Darf das Quest mehrfach erledigt werden? 
-          if ($typeinfos['unique'] == 1) {
+          if ($typeinfos['unique'] == 0) {
             $in_progress = " AND in_progress = 0 ";
           } else {
             $in_progress = "";
@@ -1819,7 +1851,9 @@ function questsystem_show()
           //zufälliges Quest holen
           if ($mybb->input['partners'] == "" || empty($mybb->input['partners'])) {
             //KEIN GRUPPENQUEST
+
             $randquest = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest WHERE type = '{$qtid}' " . $in_progress . $repeat . " AND  id NOT IN (SELECT QID as ID FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = '{$mybb->user['uid']}}' AND done = 0) AND groupquest = 0 AND admincheck = 1 ORDER BY RAND() LIMIT 1 "));
+
             if (empty($randquest)) {
               error("Bei diesem Questtyp gibt es zur Zeit keine Quests und du kannst keins ziehen.", "Keine Quests.");
             } else {
@@ -1829,7 +1863,7 @@ function questsystem_show()
                 "qid" => $randquest['id'],
                 "qtid" => $qtid,
                 "uid" => $mybb->user['uid'],
-                "groups" => $groupstring,
+                "groups_uids" => $groupstring,
               ];
               $db->insert_query("questsystem_quest_user", $insert);
 
@@ -1863,20 +1897,33 @@ function questsystem_show()
                 "qid" => $randquest['id'],
                 "qtid" => $qtid,
                 "uid" => $partner['uid'],
-                "groups" => $groupstring,
+                "groups_uids" => $groupstring,
               ];
               $db->insert_query("questsystem_quest_user", $insert);
+
+              //alert an partner
+              if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+                $alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('questsystem_QuestPartner');
+                //testen ob es den alertTyp gibt und ob der user einen Alert bekommen möchte
+                if ($alertType != NULL && $alertType->getEnabled()) {
+                  //constructor: first: an welchen user , second: type  and third the objectId 
+                  $alert = new MybbStuff_MyAlerts_Entity_Alert((int)$partner['uid'], $alertType);
+                  //some extra details
+                  $alert->setExtraDetails([]);
+                  //add the alert
+                  MybbStuff_MyAlerts_AlertManager::getInstance()->addAlert($alert);
+                }
+              }
+
               $insert = [
                 "qid" => $randquest['id'],
                 "qtid" => $qtid,
                 "uid" => $mybb->user['uid'],
-                "groups" => $groupstring,
+                "groups_uids" => $groupstring,
               ];
               $db->insert_query("questsystem_quest_user", $insert);
             }
           }
-
-
           redirect('misc.php?action=questsystem_progress');
         }
         eval("\$questsystem_misc_questtypbit .= \"" . $templates->get("questsystem_misc_questtypbit") . "\";");
@@ -1937,8 +1984,8 @@ function questsystem_show_progress()
           $submitted = "";
           $partner_str = "";
           $partner_arr = array();
-          if ($quest['groups'] != 0  || $quest['groups'] != "") {
-            $partner_arr = explode(",", $quest['groups']);
+          if ($quest['groups_uids'] != 0  || $quest['groups_uids'] != "") {
+            $partner_arr = explode(",", $quest['groups_uids']);
             foreach ($partner_arr as $p_uid) {
               if ($p_uid != $uid) {
                 $partner = get_user($p_uid);
@@ -1986,8 +2033,8 @@ function questsystem_show_progress()
           $partner_arr = array();
           if ($questdata['groupquest'] == 1) {
             $partner_str = "";
-            if ($quest['groups'] != 0 || !empty($quest['groups']) || $quest['groups'] != "") {
-              $partner_arr = explode(",", $quest['groups']);
+            if ($quest['groups_uids'] != 0 || !empty($quest['groups_uids']) || $quest['groups_uids'] != "") {
+              $partner_arr = explode(",", $quest['groups_uids']);
               foreach ($partner_arr as $p_uid) {
                 if ($p_uid != $uid) {
                   $partner = get_user($p_uid);
@@ -2076,7 +2123,7 @@ function questsystem_show_done()
 
           if ($questdata['groupquest'] == 1) {
             $getpartners = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = {$uid} AND qid = {$quest['qid']}"));
-            $partner_arr = explode(",", $getpartners['groups']);
+            $partner_arr = explode(",", $getpartners['groups_uids']);
             $partner_str = "";
             foreach ($partner_arr as $p_uid) {
               if ($p_uid != $uid) {
@@ -2115,7 +2162,7 @@ function questsystem_show_done()
 
           if ($questdata['groupquest'] == 1) {
             $getpartners = $db->fetch_array($db->write_query("SELECT * FROM " . TABLE_PREFIX . "questsystem_quest_user WHERE uid = {$uid} AND qid = {$quest['qid']}"));
-            $partner_arr = explode(",", $getpartners['groups']);
+            $partner_arr = explode(",", $getpartners['groups_uids']);
             $partner_str = "";
             foreach ($partner_arr as $p_uid) {
               if ($p_uid != $uid) {
@@ -2289,7 +2336,8 @@ function questsystem_postbit(&$post)
   //Quest einreichen 
   //Für Post 
   //  echo($post['uid']);
-  $userhasquest = $db->simple_select("questsystem_quest_user", "*", "(concat(',',groups,',') LIKE '%,{$post['uid']},%' OR uid = {$post['uid']}) AND qid != 0 AND done = 0 GROUP BY qid");
+  $userhasquest = $db->simple_select("questsystem_quest_user", "*", "(concat(',',`groups_uids`,',') LIKE '%,{$post['uid']},%' OR uid = '{$post['uid']}') AND qid != '0' AND done = '0' GROUP BY qid");
+
   if ($db->num_rows($userhasquest) > 0 && $post['uid'] != 0) {
     $pid = $post['pid'];
     $tid = $post['tid'];
@@ -2385,7 +2433,7 @@ function questsystem_index()
       if ($group == 1) {
 
         // Welche User machen das Gruppenquest
-        $users = $db->fetch_field($db->simple_select("questsystem_quest_user", "groups", "id = {$mybb->input['id']} "), "groups");
+        $users = $db->fetch_field($db->simple_select("questsystem_quest_user", "groups_uids", "id = '" . $mybb->get_input('id') . "' "), "groups_uids");
         // in Array basteln
         $arr_uids = array_filter(explode(",", $users));
 
@@ -2478,7 +2526,8 @@ function questsystem_index()
       // wenn Gruppen quest müssen alle User die Punkte bekommen
       if ($group == 1) {
         // Welche User machen das Gruppenquest
-        $users = $db->fetch_field($db->simple_select("questsystem_quest_user", "groups", "id = {$mybb->input['id']} "), "groups");
+        $groupid = $mybb->get_input('id');
+        $users = $db->fetch_field($db->simple_select("questsystem_quest_user", "groups_uids", "id = '{$groupid}' "), "groups_uids");
         // in Array basteln
         $arr_uids = array_filter(explode(",", $users));
         // Array durcheghen
@@ -2554,7 +2603,7 @@ function questsystem_isAllowed($type, $thisuser)
 {
   global $db, $mybb;
   $grouparray = array();
-  if (is_member($type['groups'], $thisuser)) {
+  if (is_member($type['groups_allowed'], $thisuser)) {
     return true;
   } else if ($type['group_str'] != "0") {
     $grouparray = explode(",", trim($type['group_str']));
@@ -2879,7 +2928,7 @@ function questsystem_add_db($type = "install")
     `name` varchar(100) NOT NULL,
     `type` varchar(100) NOT NULL,
     `typedescr` varchar(500) NOT NULL DEFAULT '',
-    `groups` varchar(100) NOT NULL,
+    `groups_allowed` varchar(100) NOT NULL,
     `enddays` INT(10) NOT NULL DEFAULT 0,
     `points_minus` int(10) NOT NULL DEFAULT 0,
     `points_add` int(10) NOT NULL DEFAULT 0,
@@ -2923,7 +2972,7 @@ function questsystem_add_db($type = "install")
     `done` int(1) NOT NULL DEFAULT 0,
     `tid` int(1) NOT NULL DEFAULT 0,
     `pid` int(1) NOT NULL DEFAULT 0,
-    `groups` varchar(150) NOT NULL DEFAULT 0,
+    `groups_uids` varchar(150) NOT NULL DEFAULT 0,
     `startdate` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
      ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_general_ci;");
