@@ -1556,8 +1556,8 @@ function questsystem_admin_load()
             $selectstr = substr($selectstr, 0, -2);
             $awaiting_user[$partnerstring] = $selectstr;
           } else {
-          $uid = $result['uid'];
-          $userinfo = get_user($uid);
+            $uid = $result['uid'];
+            $userinfo = get_user($uid);
             $selectstr = $userinfo['username'];
             $awaiting_user[$uid] = $selectstr;
             $awaiting_justsingle[$uid] = $selectstr;
@@ -1664,11 +1664,15 @@ function questsystem_member_profile()
     $points_sum = $db->fetch_field($db->write_query("SELECT sum(points) as total, uid FROM `" . TABLE_PREFIX . "questsystem_points` WHERE uid = '{$memprofile['uid']}' GROUP BY uid "), "total");
     $get_all_points = $db->simple_select("questsystem_points", "*", "uid = {$uid}", array("order_by" => "date", "order_dir" => "desc"));
     while ($userpoints = $db->fetch_array($get_all_points)) {
-      if ($userpoints['points'] == 1 or $userpoints['points'] == -1) {
+      if ($userpoints['points'] == 1 || $userpoints['points'] == -1) {
         $punkte = $userpoints['points'] . " " . $lang->questsystem_point;
       } else {
         $punkte = $userpoints['points'] . " " . $lang->questsystem_points;
       }
+      if ($userpoints['points'] == 0 || $userpoints['points'] == "0") {
+        $punkte = "0 " . $lang->questsystem_points;
+      }
+      
       $reason = $userpoints['reason'];
 
       $date = date("d.m.Y", strtotime($userpoints['date']));
@@ -2863,53 +2867,53 @@ function questsystem_alert()
     );
   }
 
-    //Info Quest als Partner eingetragen
-    class MybbStuff_MyAlerts_Formatter_QuestsystemQuestPartnerFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
+  //Info Quest als Partner eingetragen
+  class MybbStuff_MyAlerts_Formatter_QuestsystemQuestPartnerFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
+  {
+    /**
+     * Build the output string for listing page and the popup.
+     * @param MybbStuff_MyAlerts_Entity_Alert $alert The alert to format.
+     * @return string The formatted alert string.
+     */
+    public function formatAlert(MybbStuff_MyAlerts_Entity_Alert $alert, array $outputAlert)
     {
-      /**
-       * Build the output string for listing page and the popup.
-       * @param MybbStuff_MyAlerts_Entity_Alert $alert The alert to format.
-       * @return string The formatted alert string.
-       */
-      public function formatAlert(MybbStuff_MyAlerts_Entity_Alert $alert, array $outputAlert)
-      {
-        $alertContent = $alert->getExtraDetails();
-        return $this->lang->sprintf(
-          $this->lang->questsystem_QuestPartner,
-          $outputAlert['name']
-        );
-      }
-      /**
-       * Initialize the language, we need the variables $l['myalerts_setting_alertname'] for user cp! 
-       * and if need initialize other stuff
-       * @return void
-       */
-      public function init()
-      {
-        if (!$this->lang->questsystem) {
-          $this->lang->load('questsystem');
-        }
-      }
-      /**
-       * We want to define where we want to link to. 
-       * @param MybbStuff_MyAlerts_Entity_Alert $alert for which alert.
-       * @return string return the link.
-       */
-      public function buildShowLink(MybbStuff_MyAlerts_Entity_Alert $alert)
-      {
-        $alertContent = $alert->getExtraDetails();
-        return $this->mybb->settings['bburl'] . '/misc.php?action=questsystem_progress';
-      }
-    }
-    if (class_exists('MybbStuff_MyAlerts_AlertFormatterManager')) {
-      $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::getInstance();
-      if (!$formatterManager) {
-        $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::createInstance($mybb, $lang);
-      }
-      $formatterManager->registerFormatter(
-        new MybbStuff_MyAlerts_Formatter_QuestsystemQuestAcceptFormatter($mybb, $lang, 'questsystem_QuestPartner')
+      $alertContent = $alert->getExtraDetails();
+      return $this->lang->sprintf(
+        $this->lang->questsystem_QuestPartner,
+        $outputAlert['name']
       );
     }
+    /**
+     * Initialize the language, we need the variables $l['myalerts_setting_alertname'] for user cp! 
+     * and if need initialize other stuff
+     * @return void
+     */
+    public function init()
+    {
+      if (!$this->lang->questsystem) {
+        $this->lang->load('questsystem');
+      }
+    }
+    /**
+     * We want to define where we want to link to. 
+     * @param MybbStuff_MyAlerts_Entity_Alert $alert for which alert.
+     * @return string return the link.
+     */
+    public function buildShowLink(MybbStuff_MyAlerts_Entity_Alert $alert)
+    {
+      $alertContent = $alert->getExtraDetails();
+      return $this->mybb->settings['bburl'] . '/misc.php?action=questsystem_progress';
+    }
+  }
+  if (class_exists('MybbStuff_MyAlerts_AlertFormatterManager')) {
+    $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::getInstance();
+    if (!$formatterManager) {
+      $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::createInstance($mybb, $lang);
+    }
+    $formatterManager->registerFormatter(
+      new MybbStuff_MyAlerts_Formatter_QuestsystemQuestAcceptFormatter($mybb, $lang, 'questsystem_QuestPartner')
+    );
+  }
 }
 
 /**
