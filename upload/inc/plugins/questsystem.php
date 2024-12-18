@@ -574,6 +574,9 @@ function questsystem_admin_load()
         if (empty($mybb->input['types'])) {
           $errors[] = $lang->questsystem_manage_cqt_questtypes_error;
         }
+        if ($mybb->get_input('types') == '') {
+          $errors[] = $lang->questsystem_manage_cqt_questtypes_error;
+        }
         if (empty($mybb->input['qdescr'])) {
           $errors[] = $lang->questsystem_manage_cqt_qdescr_error;
         }
@@ -2061,7 +2064,7 @@ function questsystem_show_progress()
         }
 
         if ($cnt == 1) {
-          $username_tit = "<h2>{$username}</h2>";
+          $username_tit = "<h2 class=\"questsystem-username\">{$username}</h2>";
         } else {
           $username_tit = "";
         }
@@ -2586,7 +2589,7 @@ function questsystem_index()
 
 function questsystem_navigation()
 {
-  global $mybb, $templates, $questsystem_nav, $questsystem_nav_points;
+  global $mybb, $templates, $questsystem_nav, $questsystem_nav_points, $db, $questsystem_add_quest;
   if (
     $mybb->get_input('action') == "questsystem_points" ||
     $mybb->get_input('action') == "questsystem_submit" ||
@@ -2596,6 +2599,10 @@ function questsystem_navigation()
   ) {
     if ($mybb->settings['questsystem_overview_overall']) {
       eval("\$questsystem_nav_points = \"" . $templates->get("questsystem_nav_points") . "\";");
+    }
+    $addquest = $db->write_query("SELECt * FROM `" . TABLE_PREFIX . "questsystem_type` WHERE user_add = 1");
+    if($db->num_rows($addquest)){
+      eval("\$questsystem_add_quest = \"" . $templates->get("questsystem_nav_addquest") . "\";");
     }
     eval("\$questsystem_nav = \"" . $templates->get("questsystem_nav") . "\";");
   }
@@ -3278,10 +3285,18 @@ function questsystem_add_templates($type = "install")
       <div class="nav__item">
         <a href="misc.php?action=questsystem_done">Deine erledigten Quests</a>
       </div>
-      <div class="nav__item">
-        <a href="misc.php?action=questsystem_submit">Quest einreichen</a>
-      </div>
+      {$questsystem_add_quest}
       {$questsystem_nav_points}
+      </div>',
+    "sid" => "-2",
+    "version" => "",
+    "dateline" => TIME_NOW
+  );
+
+  $templates[] = array(
+    "title" => 'questsystem_nav',
+    "template" => '<div class="nav__item">
+        <a href="misc.php?action=questsystem_submit">Quest einreichen</a>
       </div>',
     "sid" => "-2",
     "version" => "",
@@ -3460,7 +3475,7 @@ function questsystem_add_templates($type = "install")
   $templates[] = array(
     "title" => 'questsystem_nav_points',
     "template" => '<div class="nav__item">
-        <a href="misc.php?action=questsystem_points">Übersicht</a>
+        <a href="misc.php?action=questsystem_points">Punkte Übersicht</a>
       </div>',
     "sid" => "-2",
     "version" => "",
