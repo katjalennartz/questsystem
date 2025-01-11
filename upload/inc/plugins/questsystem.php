@@ -9,10 +9,8 @@
  * 
  */
 // enable for Debugging:
-error_reporting(E_ERROR | E_PARSE);
-ini_set('display_errors', true);
-
-
+// error_reporting(E_ERROR | E_PARSE);
+// ini_set('display_errors', true);
 
 // Disallow direct access to this file for security reasons
 if (!defined("IN_MYBB")) {
@@ -3070,6 +3068,7 @@ function questsystem_add_templates($type = "install")
           </div>
         </div>
       </td>
+      </tr>
         </table>
       <br />
       {$footer}
@@ -3109,6 +3108,7 @@ function questsystem_add_templates($type = "install")
             </div>
           </div>
         </td>
+	</tr>
           </table>
         <br /> 
         {$footer}
@@ -3147,6 +3147,7 @@ function questsystem_add_templates($type = "install")
           </div>
         </div>
       </td>
+      </tr>
         </table>
       <br />
       {$footer}
@@ -3263,6 +3264,7 @@ function questsystem_add_templates($type = "install")
         </div>
         </div>
       </td>
+      </tr>
         </table>
       <br />
       {$footer}
@@ -3491,30 +3493,31 @@ function questsystem_add_templates($type = "install")
 
 	</head>
 	<body>
-		{$header}
-		<table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
-			<tr>
-				<td class="trow2" colspan="5">
-					<h1>Questsystem</h1>
-					<div class="questshow-container">
-						{$questsystem_nav}
-						<div class="questshow__item questshow-main">
-							<div class="questshow-overview">
-								<h2>Übersicht</h2>
-								Hier findest du eine Übersicht.
-								<div class="questshow-overview__container">
-								{$questsystem_misc_overviewquests}
-                {$questsystem_misc_overviewpoints}
-								</div>
-							</div>
-						</div>
-					</div>
-				</td>
+	{$header}
+	<table border="0" cellspacing="0" cellpadding="5" class="tborder borderboxstyle questsystem">
+	<tr>
+		<td class="trow2" colspan="5">
+		<h1>Questsystem</h1>
+		<div class="questshow-container">
+		{$questsystem_nav}
+			<div class="questshow__item questshow-main">
+			<div class="questshow-overview">
+			<h2>Übersicht</h2>
+			Hier findest du eine Übersicht.
+			<div class="questshow-overview__container">
+			{$questsystem_misc_overviewquests}
+                	{$questsystem_misc_overviewpoints}
+			</div>
+			</div>
+			</div>
+		</div>
+		</td>
+    		</tr>
 		</table>
 		<br />
 		{$footer}
 	</body>
-</html>',
+	</html>',
     "sid" => "-2",
     "version" => "",
     "dateline" => TIME_NOW
