@@ -1,11 +1,13 @@
 <?php
 
 /**
- * miniplugin for get some variables into member profile
+ * Questplugin for RPG pls read readme and Wiki! 
+ * https://github.com/katjalennartz/questsystem/wiki
+ * https://github.com/katjalennartz/questsystem/blob/main/README.md
  *
  * @author risuena
  * @version 1.0
- * @copyright risuena 2022
+ * @copyright risuena 2025
  * 
  */
 // enable for Debugging:
