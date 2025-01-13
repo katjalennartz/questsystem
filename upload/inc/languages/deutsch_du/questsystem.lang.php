@@ -9,7 +9,7 @@ $l['questsystem_admin_allocation'] = "<span><b>Quest wird von einem Admin zugete
 $l['questsystem_admin_allocation_none'] = "<span><b>Quest wird zufällig gezogen.</b></span>";
 
 $l['questsystem_points_for_quest'] = "<span><b>Punkte bei Erfolg:</b> {1} Punkte</span>";
-$l['questsystem_points_for_quest_minus'] = "<span><b>Punkte bei Erfolg:</b> {1} Punkte</span>";
+$l['questsystem_points_for_quest_minus'] = "<span><b>Punkte bei Misserfolg:</b> -{1} Punkte</span>";
 
 $l['questsystem_end_post'] = "<span>Quest wird mit einem Post beendet.</span>";
 $l['questsystem_end_scene'] = "<span>Quest wird mit einer Szene beendet.</span>";
