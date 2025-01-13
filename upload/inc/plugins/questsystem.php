@@ -565,19 +565,19 @@ function questsystem_admin_load()
     // Ein Quest hinzufügen
     if ($mybb->get_input('action') == "questsystem_quest_add") {
       if ($mybb->request_method == "post") {
-        $groupflag = $db->fetch_field($db->simple_select("questsystem_type", "groupquest", "id = {$mybb->input['types'][0]}"), "groupquest");
         if (empty($mybb->get_input('qname'))) {
           $errors[] = $lang->questsystem_manage_cqt_questname_error;
         }
         if (empty($mybb->input['types'])) {
           $errors[] = $lang->questsystem_manage_cqt_questtypes_error;
         }
-        if ($mybb->get_input('types') == '') {
+        if ($mybb->input['types'][0] == '') {
           $errors[] = $lang->questsystem_manage_cqt_questtypes_error;
         }
         if (empty($mybb->input['qdescr'])) {
           $errors[] = $lang->questsystem_manage_cqt_qdescr_error;
         }
+        $groupflag = $db->fetch_field($db->simple_select("questsystem_type", "groupquest", "id = '{$mybb->input['types'][0]}'"), "groupquest");
         if ($mybb->get_input('group') == 1 && $groupflag == 0) {
           $errors[] = "Dieser Typ erlaubt keine Gruppenquests";
         }
@@ -2062,7 +2062,7 @@ function questsystem_show_progress()
         }
 
         if ($cnt == 1) {
-          $username_tit = "<h2 class=\"questsystem-username\">{$username}</h2>";
+          $username_tit = "<h2 class=\"questsystem-username bl-heading2\">{$username}</h2>";
         } else {
           $username_tit = "";
         }
@@ -2272,19 +2272,25 @@ function questsystem_show_overview()
         while ($questuser = $db->fetch_array($query_questuser)) {
           //pro user die quests sammeln
           $quests = "";
+        $questdescr = "";
+        $questname = "";
           $userinfo = get_user($questuser['uid']);
           $username = build_profile_link($userinfo['username'],  $userinfo['uid']);;
           $quests_user = $db->simple_select("questsystem_quest_user", "*", "uid = '{$questuser['uid']}'", array("order_by" => "done"));
           while ($questuser = $db->fetch_array($quests_user)) {
 
             $questname = $db->fetch_field($db->write_query("SELECT name FROM `" . TABLE_PREFIX . "questsystem_quest` WHERE id = '{$questuser['qid']}'"), "name");
+          $questdescr = $db->fetch_field($db->write_query("SELECT questdescr FROM `" . TABLE_PREFIX . "questsystem_quest` WHERE id = '{$questuser['qid']}'"), "questdescr");
+
             if ($questuser['done'] == 0) {
               $status = " - in progress";
             } else {
               $status = " - done";
             }
 
-            $quests .= "<div class=\"\">{$questname}{$status}</div>";
+          $quests .= "<div class=\"questsystem-overview__status\">{$questname}{$status}
+          <div =\"questsystem-overview__questdescr\">{$questdescr}</div>
+          </div>";
           }
           eval("\$questsystem_misc_overviewquestsbit .= \"" . $templates->get("questsystem_misc_overviewquestsbit") . "\";");
         }
