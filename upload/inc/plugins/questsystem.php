@@ -2942,7 +2942,7 @@ function questsystem_add_db($type = "install")
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `name` varchar(100) NOT NULL,
     `type` varchar(100) NOT NULL,
-    `typedescr` varchar(500) NOT NULL DEFAULT '',
+    `typedescr` LONGTEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
     `groups_allowed` varchar(100) NOT NULL,
     `enddays` INT(10) NOT NULL DEFAULT 0,
     `points_minus` int(10) NOT NULL DEFAULT 0,
