@@ -1046,21 +1046,21 @@ function questsystem_admin_load()
       $form_container->output_row(
         $lang->questsystem_manage_cqt_formname, //Name 
         $lang->questsystem_manage_cqt_formname_descr,
-        $form->generate_text_box('name', htmlspecialchars_uni($edit['name']))
+        $form->generate_text_box('name', $edit['name'])
       );
 
       //maschinennamen
       $form_container->output_row(
         $lang->questsystem_manage_cqt_formname_db, //Name 
         $lang->questsystem_manage_cqt_formname_db_descr,
-        $form->generate_text_box('name_db', htmlspecialchars_uni($edit['type']))
+        $form->generate_text_box('name_db', $edit['type'])
       );
 
       //Beschreibung des Typs
       $form_container->output_row(
         $lang->questsystem_manage_cqt_typdescr, //Name 
         $lang->questsystem_manage_cqt_typdescr_descr,
-        $form->generate_text_area('descr', htmlspecialchars_uni($edit['typedescr']))
+        $form->generate_text_area('descr', $edit['typedescr'])
       );
 
       //nur bestimmte Gruppen?  (allgemein)
