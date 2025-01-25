@@ -3319,7 +3319,7 @@ function questsystem_add_templates($type = "install")
   );
 
   $templates[] = array(
-    "title" => 'questsystem_add_quest',
+    "title" => 'questsystem_nav_addquest',
     "template" => '<div class="nav__item">
         <a href="misc.php?action=questsystem_submit">Quest einreichen</a>
       </div>',
