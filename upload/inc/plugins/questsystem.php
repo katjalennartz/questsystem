@@ -377,6 +377,11 @@ function questsystem_admin_load()
         if (empty($mybb->get_input('finish'))) {
           $errors[] = $lang->questsystem_manage_cqt_form_finish_err;
         }
+        if ($mybb->get_input('groupselect') == "custom") {
+          if ($mybb->get_input('groupselect_sel') == "") {
+            $errors[] = $lang->questsystem_cqt_error_groupselect;
+          }
+        }
         if (empty($errors)) {
           if ($mybb->get_input('groupselect') == "custom") {
             // var_dump($mybb->input['groupselect_sel']);
@@ -954,6 +959,11 @@ function questsystem_admin_load()
         if (empty($mybb->input['groupselect'])) {
           $errors[] = $lang->questsystem_cqt_error_groupselect;
         }
+        if ($mybb->get_input('groupselect') == "custom") {
+          if ($mybb->get_input('groupselect_sel') == "") {
+            $errors[] = $lang->questsystem_cqt_error_groupselect;
+          }
+        }
         if (empty($mybb->input['enddays'])) {
           $end = "0";
         } else {
@@ -1046,14 +1056,14 @@ function questsystem_admin_load()
       $form_container->output_row(
         $lang->questsystem_manage_cqt_formname, //Name 
         $lang->questsystem_manage_cqt_formname_descr,
-        $form->generate_text_box('name', $edit['name'])
+        $form->generate_text_box('name', htmlspecialchars_uni($edit['name']))
       );
 
       //maschinennamen
       $form_container->output_row(
         $lang->questsystem_manage_cqt_formname_db, //Name 
         $lang->questsystem_manage_cqt_formname_db_descr,
-        $form->generate_text_box('name_db', $edit['type'])
+        $form->generate_text_box('name_db', htmlspecialchars_uni($edit['type']))
       );
 
       //Beschreibung des Typs
