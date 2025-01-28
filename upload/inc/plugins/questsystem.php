@@ -2459,10 +2459,10 @@ function questsystem_index()
         "done" => 1,
       ];
       //wieviele Punkte soll der User bekommen?
-      $points = $db->fetch_field($db->simple_select("questsystem_type", "points_add", "id = {$mybb->input['qtid']} "), "points_add");
+      $points = $db->fetch_field($db->simple_select("questsystem_type", "points_add", "id = '{$mybb->input['qtid']}' "), "points_add");
 
       // Ist es ein Gruppenquest?
-      $group = $db->fetch_field($db->simple_select("questsystem_quest", "groupquest", "id = {$mybb->input['qid']} "), "groupquest");
+      $group = $db->fetch_field($db->simple_select("questsystem_quest", "groupquest", "id = '{$mybb->input['qid']}' "), "groupquest");
 
       // Inhalt des Felds, welche User das Quest schon gemacht haben.
       $get_uids = $db->fetch_field($db->simple_select("questsystem_quest", "uids", "id = {$mybb->input['qid']} "), "uids");
@@ -2474,13 +2474,16 @@ function questsystem_index()
         $users = $db->fetch_field($db->simple_select("questsystem_quest_user", "groups_uids", "id = '" . $mybb->get_input('id') . "' "), "groups_uids");
         // in Array basteln
         $arr_uids = array_filter(explode(",", $users));
+        if($users == ""){
+          $arr_uids[] = $mybb->get_input('uid', MyBB::INPUT_INT);
+        }
 
         // Array durchgehen
         foreach ($arr_uids as $uid) {
           // an userstring hängen
           $get_uids .= ",{$uid}";
           //done = 1 
-          $db->update_query("questsystem_quest_user", $update, "qid = {$mybb->input['qid']} and uid = {$uid}");
+          $db->update_query("questsystem_quest_user", $update, "qid = '{$mybb->input['qid']}' and uid = '{$uid}'");
 
           //Punkte verteilen
           $insert = array(
