@@ -171,11 +171,11 @@ function questsystem_activate()
 
 
     //alert: User wurde ein Quest zugeteilt
-    $alertTypeQuestgiveUserw = new MybbStuff_MyAlerts_Entity_AlertType();
-    $alertTypeQuestgiveUserw->setCanBeUserDisabled(true);
-    $alertTypeQuestgiveUserw->setCode("questsystem_giveUser");
-    $alertTypeQuestgiveUserw->setEnabled(true);
-    $alertTypeManager->add($alertTypeQuestgiveUserw);
+    $alertTypeQuestgiveUser = new MybbStuff_MyAlerts_Entity_AlertType();
+    $alertTypeQuestgiveUser->setCanBeUserDisabled(true);
+    $alertTypeQuestgiveUser->setCode("questsystem_giveUser");
+    $alertTypeQuestgiveUser->setEnabled(true);
+    $alertTypeManager->add($alertTypeQuestgiveUser);
 
     //alert: User wurde als Partner eingetragen
     $alertTypeQuestPartner = new MybbStuff_MyAlerts_Entity_AlertType();
@@ -1491,7 +1491,6 @@ function questsystem_admin_load()
           $arr_uids = array();
           $arr_uids = explode(",", $arr_uids_str);
 
-
           $today = date("Y-m-d h:i", time());
           foreach ($arr_uids as $uid) {
             if ($questinfo['groupquest'] == 1) {
@@ -2762,7 +2761,7 @@ function questsystem_alert()
     );
   }
   // Info  Zuteilung Quest 
-  class MybbStuff_MyAlerts_Formatter_QuestsystemGiveUserFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
+  class MybbStuff_MyAlerts_Formatter_QuestsystemgiveUserFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
   {
     /**
      * Build the output string tfor listing page and the popup.
@@ -2808,7 +2807,7 @@ function questsystem_alert()
       $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::createInstance($mybb, $lang);
     }
     $formatterManager->registerFormatter(
-      new MybbStuff_MyAlerts_Formatter_QuestsystemGiveUserFormatter($mybb, $lang, 'questsystem_giveUser')
+      new MybbStuff_MyAlerts_Formatter_QuestsystemgiveUserFormatter($mybb, $lang, 'questsystem_giveUser')
     );
   }
 
@@ -2952,7 +2951,7 @@ function questsystem_alert()
       $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::createInstance($mybb, $lang);
     }
     $formatterManager->registerFormatter(
-      new MybbStuff_MyAlerts_Formatter_QuestsystemQuestAcceptFormatter($mybb, $lang, 'questsystem_QuestPartner')
+      new MybbStuff_MyAlerts_Formatter_QuestsystemQuestPartnerFormatter($mybb, $lang, 'questsystem_QuestPartner')
     );
   }
 }
