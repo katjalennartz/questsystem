@@ -17,7 +17,7 @@ function task_questsystem($task)
 {
   global $db, $mybb, $lang;
 
-  $get_types = $db->simple_select("questsystem_questtype", "*", "active = 1 and enddays != 0");
+  $get_types = $db->simple_select("questsystem_type", "*", "active = 1 and enddays != 0");
   while ($type = $db->fetch_array($get_types)) {
     $get_quests = $db->simple_select("questsystem_quest_user", "*", "qtid = {$type['id']} and done = 0 AND and DATE_ADD(startdate, INTERVAL {$type['enddays']} DAY) < CURDATE()");
     while ($entry = $db->fetch_array($get_quests)) {
