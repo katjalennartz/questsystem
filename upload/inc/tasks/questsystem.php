@@ -39,3 +39,5 @@ function task_questsystem($task)
     }
   }
 }
+
+// MyBB SQL Error - [20] array ( 'error_no' => 1146, 'error' => 'Table \'d0391dab.mybb_questsystem_questtype\' doesn\'t exist', 'query' => 'SELECT * FROM mybb_questsystem_questtype WHERE active = 1 and enddays != 0', )
